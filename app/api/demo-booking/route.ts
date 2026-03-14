@@ -1,18 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+/** Parse "HH:mm" or "H:mm" to minutes since midnight */
+function timeToMinutes(t: string): number {
+  const [h, m] = String(t).trim().split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+/** Check if requested time is within 1 hour of any existing booking on same date */
+function hasConflict(requestedTime: string, existingTimes: string[]): boolean {
+  const reqMin = timeToMinutes(requestedTime);
+  for (const t of existingTimes) {
+    const existMin = timeToMinutes(t);
+    if (Math.abs(reqMin - existMin) < 60) return true;
+  }
+  return false;
+}
+
 /**
  * POST /api/demo-booking
- * Books a call from the pitch demo. Saves to Supabase demo_bookings table.
+ * Books a call from the pitch demo. Enforces 1-hour separation between bookings.
  * Body: { name, email?, phone?, date, time, topic }
- * Run docs/SUPABASE-DEMO-TABLES.sql in Supabase to create the table.
  */
 export async function POST(req: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !anonKey) {
-    return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
+    return NextResponse.json({ success: false, error: "Supabase not configured" }, { status: 503 });
   }
 
   try {
@@ -20,16 +35,31 @@ export async function POST(req: NextRequest) {
     const { name, email, phone, date, time, topic } = body;
 
     if (!name || !date || !time || !topic) {
-      return NextResponse.json(
-        { error: "Missing required fields: name, date, time, topic" },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        success: false,
+        error: "missing_fields",
+        message: "Please fill in name, date, time, and topic.",
+      }, { status: 400 });
     }
 
     const contact = phone || email || "from demo";
-
-    // Use service role when available — bypasses RLS so inserts always succeed
     const supabase = createClient(url, serviceKey || anonKey);
+
+    // Check for existing bookings on same date — enforce 1 hour separation
+    const { data: existing } = await supabase
+      .from("demo_bookings")
+      .select("time")
+      .eq("date", String(date).trim());
+
+    const existingTimes = (existing || []).map((r) => r.time).filter(Boolean);
+    if (hasConflict(String(time).trim(), existingTimes)) {
+      return NextResponse.json({
+        success: false,
+        error: "slot_unavailable",
+        message: "This time slot isn't available. Please choose a time at least 1 hour apart from existing bookings.",
+      }, { status: 409 });
+    }
+
     const { error } = await supabase.from("demo_bookings").insert({
       name: String(name).trim(),
       phone: contact,
@@ -42,7 +72,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error("Demo booking API error:", error);
-      return NextResponse.json({ error: "Failed to save booking" }, { status: 500 });
+      return NextResponse.json({ success: false, error: "save_failed", message: "Could not save booking. Please try again." }, { status: 500 });
     }
 
     // Email alert to admin — set RESEND_API_KEY and ADMIN_EMAIL in Vercel
@@ -72,10 +102,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Booked ${name} for ${topic} on ${date} at ${time}`,
+      message: `Booked! ${name} — ${date} at ${time} for ${topic}`,
     });
   } catch (err) {
     console.error("Demo booking API error:", err);
-    return NextResponse.json({ error: "Failed to save booking" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "server_error", message: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

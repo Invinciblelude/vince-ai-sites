@@ -44,11 +44,11 @@ export function NavAuth() {
       <div className="flex items-center gap-3">
         {isAdmin && (
           <>
-            <Link href="/dashboard" className="hidden sm:block text-sm text-muted transition-colors hover:text-foreground">
-              Dashboard
-            </Link>
             <Link href="/clients" className="hidden sm:block text-sm text-muted transition-colors hover:text-foreground">
               Clients
+            </Link>
+            <Link href="/dashboard" className="hidden sm:block text-sm text-muted transition-colors hover:text-foreground">
+              Leads & Bookings
             </Link>
           </>
         )}

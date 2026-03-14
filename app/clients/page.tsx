@@ -52,7 +52,7 @@ export default function ClientsDashboard() {
           <Link href="/" className="mb-2 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
             &larr; Home
           </Link>
-          <h1 className="text-3xl font-bold">Client Dashboard</h1>
+          <h1 className="text-3xl font-bold">Clients</h1>
           <p className="text-muted text-sm mt-1">
             {clients.length} client{clients.length !== 1 ? "s" : ""} total
           </p>
@@ -62,7 +62,7 @@ export default function ClientsDashboard() {
             href="/dashboard"
             className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-background"
           >
-            Sign-ups & Calendar
+            Leads & Bookings
           </Link>
           <Link
             href="/try"

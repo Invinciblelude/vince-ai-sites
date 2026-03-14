@@ -112,9 +112,9 @@ export default function DashboardPage() {
           <Link href="/clients" className="mb-2 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
             &larr; Clients
           </Link>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold">Leads & Bookings</h1>
           <p className="text-muted text-sm mt-1">
-            Sign-ups, bookings, and alerts
+            Demo activity from the pitch page — sign-ups, bookings, conversations
           </p>
         </div>
       </div>
@@ -283,33 +283,60 @@ export default function DashboardPage() {
 
       {activeTab === "calendar" && (
         <div className="space-y-6">
-          <h3 className="font-semibold">Session bookings</h3>
-          {sortedDates.length === 0 ? (
+          <h3 className="font-semibold">All booking sessions</h3>
+          <p className="text-sm text-muted">Every session booked from the pitch page. Logged chronologically.</p>
+          {bookings.length === 0 ? (
             <p className="text-sm text-muted">No bookings yet. Bookings from the pitch page will appear here.</p>
           ) : (
-            <div className="space-y-4">
-              {sortedDates.map((date) => (
-                <div key={date} className="rounded-xl border border-border bg-card overflow-hidden">
-                  <div className="bg-muted/30 px-4 py-2 font-medium text-sm">
-                    {new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-                  </div>
-                  <div className="divide-y divide-border">
-                    {bookingsByDate[date].map((b) => (
-                      <div key={b.id} className="flex items-center justify-between px-4 py-3 text-sm">
-                        <div>
-                          <div className="font-medium">{b.name}</div>
-                          <div className="text-muted">{b.service}</div>
-                        </div>
-                        <div className="text-right">
-                          <div>{b.time}</div>
-                          {b.phone && <div className="text-xs text-muted">{b.phone}</div>}
-                        </div>
+            <>
+              {/* Full log — all sessions, newest first */}
+              <div className="rounded-xl border border-border bg-card overflow-hidden">
+                <div className="divide-y divide-border max-h-[50vh] overflow-y-auto">
+                  {bookings.map((b) => (
+                    <div key={b.id} className="flex items-center justify-between gap-4 px-4 py-3 text-sm hover:bg-muted/30">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium">{b.name}</div>
+                        <div className="text-muted truncate">{b.service}</div>
+                        {b.phone && <div className="text-xs text-muted mt-0.5">{b.phone}</div>}
                       </div>
-                    ))}
-                  </div>
+                      <div className="text-right shrink-0">
+                        <div className="font-medium">{b.date} at {b.time}</div>
+                        <div className="text-xs text-muted">{new Date(b.created_at).toLocaleString()}</div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+              {/* Grouped by date */}
+              <details className="rounded-xl border border-border bg-card overflow-hidden">
+                <summary className="bg-muted/30 px-4 py-3 font-medium text-sm cursor-pointer hover:bg-muted/50">
+                  View by date
+                </summary>
+                <div className="divide-y divide-border">
+                  {sortedDates.map((date) => (
+                    <div key={date}>
+                      <div className="bg-muted/20 px-4 py-2 font-medium text-sm">
+                        {new Date(date + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                      </div>
+                      <div className="divide-y divide-border">
+                        {bookingsByDate[date].map((b) => (
+                          <div key={b.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                            <div>
+                              <div className="font-medium">{b.name}</div>
+                              <div className="text-muted">{b.service}</div>
+                            </div>
+                            <div className="text-right">
+                              <div>{b.time}</div>
+                              {b.phone && <div className="text-xs text-muted">{b.phone}</div>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </>
           )}
         </div>
       )}

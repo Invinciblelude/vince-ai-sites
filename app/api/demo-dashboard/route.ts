@@ -33,7 +33,7 @@ export async function GET() {
 
     const [leadsRes, bookingsRes, formsRes] = await Promise.all([
       supabase.from("demo_leads").select("*").order("created_at", { ascending: false }).limit(50),
-      supabase.from("demo_bookings").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("demo_bookings").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("demo_form_submissions").select("*").order("created_at", { ascending: false }).limit(50),
     ]);
 

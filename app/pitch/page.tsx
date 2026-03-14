@@ -272,7 +272,7 @@ export default function PitchPage() {
   const [demoDiscussionLog, setDemoDiscussionLog] = useState<{ role: "user" | "assistant"; text: string; at: string }[]>([]);
   const [demoBookings, setDemoBookings] = useState<{ name: string; date: string; time: string; topic: string }[]>([]);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingMessage, setBookingMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const lastFormSaveRef = useRef<string>("");
@@ -481,26 +481,34 @@ export default function PitchPage() {
     const topic = (form.querySelector('[name="booking-topic"]') as HTMLInputElement)?.value?.trim();
     if (!name || !date || !time || !topic) return;
     setBookingLoading(true);
-    setBookingSuccess(false);
-    const newBooking = { name, date, time, topic };
-    setDemoBookings((prev) => [...prev, newBooking]);
-    setBookingSuccess(true);
-    form.reset();
-    setBookingLoading(false);
-    setTimeout(() => setBookingSuccess(false), 3000);
-    // Save to backend (fire-and-forget)
-    fetch("/api/demo-booking", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name || biz.ownerName || biz.businessName,
-        email: biz.email,
-        phone: biz.phone,
-        date,
-        time,
-        topic,
-      }),
-    }).catch((e) => console.error("Booking save failed:", e));
+    setBookingMessage(null);
+    try {
+      const res = await fetch("/api/demo-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name || biz.ownerName || biz.businessName,
+          email: biz.email,
+          phone: biz.phone,
+          date,
+          time,
+          topic,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.success) {
+        setDemoBookings((prev) => [...prev, { name, date, time, topic }]);
+        setBookingMessage({ type: "success", text: data.message || "Booked!" });
+        form.reset();
+      } else {
+        setBookingMessage({ type: "error", text: data.message || "Could not book. Please try again." });
+      }
+    } catch {
+      setBookingMessage({ type: "error", text: "Connection error. Please try again." });
+    } finally {
+      setBookingLoading(false);
+      setTimeout(() => setBookingMessage(null), 5000);
+    }
   }
 
   async function handleChat(e: React.FormEvent) {
@@ -890,8 +898,13 @@ export default function PitchPage() {
                   </div>
                   <input name="booking-topic" placeholder="Topic / interest" className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm" required />
                   <button type="submit" disabled={bookingLoading} className="w-full rounded-xl bg-green py-3.5 text-sm font-semibold text-white transition-colors hover:bg-green/90 disabled:opacity-50">
-                    {bookingLoading ? "Adding…" : bookingSuccess ? "✓ Booked" : "Book session now"}
+                    {bookingLoading ? "Checking availability…" : "Book session now"}
                   </button>
+                  {bookingMessage && (
+                    <div className={`rounded-lg px-4 py-3 text-sm ${bookingMessage.type === "success" ? "bg-green/10 text-green-800 dark:text-green-200" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>
+                      {bookingMessage.type === "success" ? "✓" : "⚠"} {bookingMessage.text}
+                    </div>
+                  )}
                 </form>
                 {demoBookings.length > 0 && (
                   <div className="mt-4 space-y-2 border-t border-border pt-4">
