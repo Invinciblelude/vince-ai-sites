@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import Image from "next/image";
 import { NavAuth } from "@/components/nav-auth";
 import "./globals.css";
 
@@ -15,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trion Express | Your AI Business Team — Answer, Log, Book 24/7",
+  title: "Trion Express | AI Business Team — Answer, Book & Grow 24/7",
   description:
-    "Trion Express — AI agent that answers customers, captures leads, books appointments, and collects reviews. 14+ sites launched.",
+    "AI agent for barbers, salons, restaurants, contractors. Answers customers 24/7, books appointments, captures leads, collects reviews. Live site in 24 hours. See your preview in 60 seconds.",
 };
 
 export default function RootLayout({
@@ -32,8 +33,9 @@ export default function RootLayout({
       >
         <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-            <Link href="/" className="font-bold tracking-tight text-foreground">
-              Trion Express
+            <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-foreground">
+              <Image src="/trion-express-logo.png" alt="" width={32} height={32} className="rounded-lg" />
+              <span>Trion Express</span>
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted">
               <a href="/#services" className="hidden sm:block transition-colors hover:text-foreground">
@@ -51,9 +53,9 @@ export default function RootLayout({
               <a href="/#reports" className="hidden sm:block transition-colors hover:text-foreground">
                 Reports
               </a>
-              <a href="/#pro-analysis" className="hidden sm:block transition-colors hover:text-foreground">
+              <Link href="/pro-demo" className="hidden sm:block transition-colors hover:text-foreground">
                 Pro
-              </a>
+              </Link>
               <NavAuth />
             </div>
           </div>

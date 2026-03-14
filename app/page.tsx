@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { VinceAssistant } from "@/components/vince-assistant";
 import { ProAnalysisSection } from "@/components/pro-analysis-section";
 import { TRION_SITES, SITE_CATEGORIES } from "@/lib/sites";
@@ -63,33 +64,67 @@ export default function Home() {
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
         <div className="relative">
-        <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-accent via-amber-500 to-green text-5xl font-bold text-white shadow-2xl shadow-accent/30 ring-4 ring-accent/20 animate-float">
-          T
+        <div className="mb-6 flex h-32 w-32 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/10 via-amber-500/10 to-green/10 ring-4 ring-accent/20 animate-float overflow-hidden">
+          <Image src="/trion-express-logo.png" alt="Trion Express" width={128} height={128} className="object-contain" priority />
         </div>
         <h1 className="mb-3 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl bg-gradient-to-r from-foreground via-foreground to-muted bg-clip-text">
-          Hi, I&apos;m Trion 👋
+          AI Business Team — Answer, Book & Grow 24/7
         </h1>
         <p className="mb-2 text-lg text-accent font-semibold">
-          I&apos;m your AI agent — here to help your business grow.
+          I&apos;m Trion. I answer customers, book appointments, capture leads, and collect reviews — so you don&apos;t miss a sale.
         </p>
         <p className="mx-auto mb-8 max-w-2xl text-base text-muted leading-relaxed">
-          I answer your customers 24/7. I log leads, book appointments, collect reviews, and analyze reports & projects.
-          I run as five roles — CEO, COO, CFO, Secretary, Employee. Check out my accomplishments below — {TRION_SITES.length} live sites I&apos;ve built across {SITE_CATEGORIES.length} industries.
+          Barbers, salons, restaurants, contractors — any business that needs to answer customers 24/7. I run as five roles: CEO, COO, CFO, Secretary, Employee. {TRION_SITES.length} live sites built across {SITE_CATEGORIES.length} industries.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/pitch"
             className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-all hover:bg-accent-dim hover:scale-[1.02] shadow-lg shadow-accent/20"
           >
-            Hire Agent — Talk to Trion
+            See Your Site in 60 Seconds — Free
           </Link>
           <Link
             href="/sites"
             className="rounded-xl border-2 border-accent/50 bg-accent/5 px-8 py-3.5 font-semibold text-accent transition-all hover:bg-accent/10 hover:border-accent"
           >
-            See {TRION_SITES.length} Live Sites
+            View {TRION_SITES.length} Live Sites
           </Link>
         </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="mb-24 border-t border-border/50 pt-24">
+        <div className="mb-12 text-center">
+          <span className="inline-block mb-3 rounded-full bg-green/10 px-4 py-1.5 text-sm font-medium text-green">
+            How It Works
+          </span>
+          <h2 className="mb-2 text-3xl font-bold">From Chat to Live Site in 24 Hours</h2>
+          <p className="mx-auto max-w-2xl text-muted">
+            Tell us your business. We build your AI team, website, booking, and CRM. No coding. No chasing customers.
+          </p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {[
+            { step: "1", title: "Tell us your business", desc: "Chat with Trion. Share your industry, services, and goals. Get a live site preview in 60 seconds." },
+            { step: "2", title: "We build your AI team", desc: "Website, AI chat, booking, CRM, reviews — all connected. Five roles working 24/7." },
+            { step: "3", title: "Go live in 24 hours", desc: "Your site goes live. Customers can book, ask questions, and get answers — even at 2am." },
+            { step: "4", title: "You focus on your work", desc: "We handle the calls, texts, bookings, and follow-ups. You run your business." },
+          ].map((item) => (
+            <div key={item.step} className="rounded-xl border border-border bg-card p-6">
+              <span className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent/20 text-lg font-bold text-accent">{item.step}</span>
+              <h3 className="mb-2 font-semibold">{item.title}</h3>
+              <p className="text-sm text-muted">{item.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 rounded-xl border border-border bg-muted/30 p-6">
+          <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-muted">What we handle for you</h4>
+          <div className="flex flex-wrap gap-2">
+            {["24/7 customer answers", "Appointment booking", "Lead capture", "Review requests", "Reminder texts", "Website + AI chat", "CRM", "No double-bookings"].map((item) => (
+              <span key={item} className="rounded-full bg-background px-3 py-1.5 text-sm font-medium border border-border">{item}</span>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -143,12 +178,12 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-accent/10 to-green/10" />
         <div className="relative p-10 sm:p-12">
         <div className="relative text-center">
-          <h2 className="mb-3 text-3xl sm:text-4xl font-bold">Hey — Want Me to Build Yours?</h2>
+          <h2 className="mb-3 text-3xl sm:text-4xl font-bold">See Your Site Before You Build</h2>
           <p className="mx-auto mb-3 max-w-2xl text-muted">
-            I build AI assistants, booking, CRM, and reviews — live in 24 hours. Barber shops, salons, restaurants, contractors — any business that needs to answer customers 24/7.
+            Tell us your business — barber shop, salon, restaurant, contractor — and we&apos;ll show your live site preview in 60 seconds. Services, booking, AI chat, gallery. No payment, no commitment.
           </p>
           <p className="mx-auto mb-8 max-w-xl text-sm text-muted">
-            Talk to me. I&apos;ll give you a live preview in 60 seconds. No payment, no commitment.
+            Chat with Trion. Get an instant preview. See what working with us could look like.
           </p>
           <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
             <Link
@@ -165,6 +200,29 @@ export default function Home() {
             </Link>
           </div>
           </div>
+        </div>
+      </section>
+
+      {/* Who it's for */}
+      <section className="mb-24 border-t border-border/50 pt-24">
+        <div className="mb-12 text-center">
+          <span className="inline-block mb-3 rounded-full bg-amber-500/10 px-4 py-1.5 text-sm font-medium text-amber-600">
+            Who We Serve
+          </span>
+          <h2 className="mb-2 text-3xl font-bold">Built for Service Businesses That Answer the Phone</h2>
+          <p className="mx-auto max-w-2xl text-muted">
+            Barbers, salons, spas, restaurants, contractors, photographers — any business where customers call, book, and ask questions.
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-3">
+          {["Barber shops", "Salons & spas", "Restaurants", "Contractors", "Photographers", "Groomers", "Trainers", "Retail stores"].map((item) => (
+            <span key={item} className="rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium">{item}</span>
+          ))}
+        </div>
+        <div className="mt-8 rounded-xl border-2 border-accent/20 bg-accent/5 p-6 text-center">
+          <p className="text-sm text-muted">
+            <strong className="text-foreground">Pricing:</strong> Starter $199 + $50/mo · Pro $349 + $75/mo (most popular) · Premium $599 + $150/mo. No long-term contracts. Live in 24 hours.
+          </p>
         </div>
       </section>
 
