@@ -67,10 +67,12 @@ export default function DashboardPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const recentSignups = [
+  const recentActivity = [
     ...leads.map((l) => ({ type: "lead" as const, label: l.interest || "Interest", name: l.name || l.contact || "Anonymous", at: l.created_at })),
     ...forms.map((f) => ({ type: "form" as const, label: "Tell Me About You", name: f.business_name || f.owner_name || f.email || "Form", at: f.created_at })),
-  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, 10);
+    ...conversations.map((c) => ({ type: "message" as const, label: c.role || "message", name: (c.content || "").slice(0, 50) + ((c.content || "").length > 50 ? "…" : ""), at: c.created_at })),
+    ...bookings.map((b) => ({ type: "booking" as const, label: `${b.date || ""} at ${b.time || ""}`, name: b.name || "Booking", sub: b.service, at: b.created_at })),
+  ].filter((x) => x.at).sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()).slice(0, 15);
 
   const bookingsByDate = bookings.reduce<Record<string, Booking[]>>((acc, b) => {
     const d = b.date;
@@ -161,17 +163,32 @@ export default function DashboardPage() {
               <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse" />
               Recent activity
             </h3>
-            {recentSignups.length === 0 ? (
-              <p className="text-sm text-muted">No sign-ups yet. Activity from the pitch page will appear here.</p>
+            {recentActivity.length === 0 ? (
+              <p className="text-sm text-muted">No activity yet. Chat and bookings from the pitch page will appear here.</p>
             ) : (
               <ul className="space-y-2">
-                {recentSignups.map((item, i) => (
-                  <li key={i} className="flex items-center justify-between rounded-lg bg-background px-4 py-3 text-sm">
-                    <div>
-                      <span className="font-medium">{item.name}</span>
-                      <span className="text-muted"> — {item.label}</span>
+                {recentActivity.map((item, i) => (
+                  <li key={i} className="flex items-center justify-between gap-4 rounded-lg bg-background px-4 py-3 text-sm">
+                    <div className="min-w-0 flex-1">
+                      {item.type === "message" ? (
+                        <>
+                          <span className="font-medium capitalize">{item.label}</span>
+                          <div className="text-muted truncate mt-0.5">{item.name}</div>
+                        </>
+                      ) : item.type === "booking" ? (
+                        <>
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-muted"> — Session {item.label}</span>
+                          {item.sub && <div className="text-muted truncate mt-0.5">{item.sub}</div>}
+                        </>
+                      ) : (
+                        <>
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-muted"> — {item.label}</span>
+                        </>
+                      )}
                     </div>
-                    <span className="text-xs text-muted">{new Date(item.at).toLocaleString()}</span>
+                    <span className="text-xs text-muted shrink-0">{item.at ? new Date(item.at).toLocaleString() : "—"}</span>
                   </li>
                 ))}
               </ul>

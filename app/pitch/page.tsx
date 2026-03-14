@@ -483,8 +483,12 @@ export default function PitchPage() {
     setBookingLoading(true);
     setBookingSuccess(false);
     const newBooking = { name, date, time, topic };
+    setDemoBookings((prev) => [...prev, newBooking]);
+    setBookingSuccess(true);
     form.reset();
-    // Save to backend — only show success when it actually persists
+    setBookingLoading(false);
+    setTimeout(() => setBookingSuccess(false), 3000);
+    // Save to backend (fire-and-forget)
     fetch("/api/demo-booking", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -496,22 +500,7 @@ export default function PitchPage() {
         time,
         topic,
       }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.error) {
-          console.error("Booking save failed:", data.error);
-          setBookingLoading(false);
-          return;
-        }
-        setDemoBookings((prev) => [...prev, newBooking]);
-        setBookingSuccess(true);
-        setTimeout(() => setBookingSuccess(false), 3000);
-      })
-      .catch((e) => {
-        console.error("Booking save failed:", e);
-      })
-      .finally(() => setBookingLoading(false));
+    }).catch((e) => console.error("Booking save failed:", e));
   }
 
   async function handleChat(e: React.FormEvent) {
