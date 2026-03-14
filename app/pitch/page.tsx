@@ -904,6 +904,11 @@ export default function PitchPage() {
                   {bookingMessage && (
                     <div className={`rounded-lg px-4 py-3 text-sm ${bookingMessage.type === "success" ? "bg-green/10 text-green-800 dark:text-green-200" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>
                       {bookingMessage.type === "success" ? "✓" : "⚠"} {bookingMessage.text}
+                      {bookingMessage.type === "error" && (
+                        <a href="/api/check-supabase" target="_blank" rel="noopener noreferrer" className="block mt-2 text-xs underline">
+                          Check Supabase setup →
+                        </a>
+                      )}
                     </div>
                   )}
                 </form>
