@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { INDUSTRIES, matchIndustry, buildIndustryKnowledgeBlock, TRION_ROLES, type IndustryProfile } from "@/lib/industries";
+import { useSpeechToText } from "@/lib/use-speech-to-text";
 
 interface BusinessInfo {
   businessName: string;
@@ -245,6 +246,8 @@ export default function PitchPage() {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+
+  const { isListening, supported, toggle } = useSpeechToText((text) => setInput(text));
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
@@ -665,6 +668,21 @@ export default function PitchPage() {
                       className="flex-1 rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-accent transition-colors"
                       disabled={isLoading}
                     />
+                    {supported && (
+                      <button
+                        type="button"
+                        onClick={toggle}
+                        title={isListening ? "Stop listening" : "Speak"}
+                        className={`shrink-0 rounded-xl px-4 py-3 transition-colors ${
+                          isListening ? "bg-red-500 text-white" : "bg-muted text-muted-foreground hover:bg-accent/10 hover:text-accent"
+                        }`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                          <path d="M12 2a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4Z" />
+                          <path d="M5 11a1 1 0 0 1 1 1 6 6 0 0 0 12 0 1 1 0 1 1 2 0 8 8 0 0 1-16 0 1 1 0 0 1 1-1Z" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       type="submit"
                       disabled={!input.trim() || isLoading}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useSpeechToText } from "@/lib/use-speech-to-text";
 
 interface Message {
   role: "user" | "assistant";
@@ -58,6 +59,8 @@ export function SalesChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { isListening, supported, toggle } = useSpeechToText((text) => setInput(text));
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -187,6 +190,21 @@ export function SalesChat() {
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
             disabled={isLoading}
           />
+          {supported && (
+            <button
+              type="button"
+              onClick={toggle}
+              title={isListening ? "Stop listening" : "Speak"}
+              className={`shrink-0 rounded-lg px-3 py-2 transition-colors ${
+                isListening ? "bg-red-500 text-white" : "bg-muted text-muted-foreground hover:bg-accent/10 hover:text-accent"
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                <path d="M12 2a4 4 0 0 1 4 4v6a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4Z" />
+                <path d="M5 11a1 1 0 0 1 1 1 6 6 0 0 0 12 0 1 1 0 1 1 2 0 8 8 0 0 1-16 0 1 1 0 0 1 1-1Z" />
+              </svg>
+            </button>
+          )}
           <button type="submit" disabled={!input.trim() || isLoading} className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-30">
             Send
           </button>
