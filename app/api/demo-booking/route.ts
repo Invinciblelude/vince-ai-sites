@@ -9,8 +9,9 @@ import { createClient } from "@supabase/supabase-js";
  */
 export async function POST(req: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !anonKey) {
     return NextResponse.json({ error: "Supabase not configured" }, { status: 503 });
   }
 
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
 
     const contact = phone || email || "from demo";
 
-    const supabase = createClient(url, key);
+    // Use service role when available — bypasses RLS so inserts always succeed
+    const supabase = createClient(url, serviceKey || anonKey);
     const { error } = await supabase.from("demo_bookings").insert({
       name: String(name).trim(),
       phone: contact,
@@ -43,23 +45,29 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to save booking" }, { status: 500 });
     }
 
-    // Email alert to admin (optional — set RESEND_API_KEY and ADMIN_EMAIL in Vercel)
+    // Email alert to admin — set RESEND_API_KEY and ADMIN_EMAIL in Vercel
     const adminEmail = process.env.ADMIN_EMAIL;
     const resendKey = process.env.RESEND_API_KEY;
     if (adminEmail && resendKey) {
-      fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${resendKey}`,
-        },
-        body: JSON.stringify({
-          from: "Trion Express <onboarding@resend.dev>",
-          to: [adminEmail],
-          subject: `New session booked: ${name} — ${date} at ${time}`,
-          html: `<p><strong>${name}</strong> booked a session.</p><p><strong>Date:</strong> ${date} at ${time}</p><p><strong>Topic:</strong> ${topic}</p><p><strong>Contact:</strong> ${contact}</p><p><a href="https://trionexpress.com/dashboard">View dashboard</a></p>`,
-        }),
-      }).catch((e) => console.error("Resend email error:", e));
+      try {
+        const res = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${resendKey}`,
+          },
+          body: JSON.stringify({
+            from: "Trion Express <onboarding@resend.dev>",
+            to: [adminEmail],
+            subject: `New session booked: ${name} — ${date} at ${time}`,
+            html: `<p><strong>${name}</strong> booked a session.</p><p><strong>Date:</strong> ${date} at ${time}</p><p><strong>Topic:</strong> ${topic}</p><p><strong>Contact:</strong> ${contact}</p><p><a href="https://trionexpress.com/dashboard">View dashboard</a></p>`,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) console.error("Resend email failed:", res.status, data);
+      } catch (e) {
+        console.error("Resend email error:", e);
+      }
     }
 
     return NextResponse.json({
