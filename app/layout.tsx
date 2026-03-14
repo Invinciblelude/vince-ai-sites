@@ -39,9 +39,9 @@ export default function RootLayout({
               <a href="/#services" className="hidden sm:block transition-colors hover:text-foreground">
                 Services
               </a>
-              <a href="/#hire-agent" className="hidden sm:block transition-colors hover:text-foreground">
+              <Link href="/pitch" className="hidden sm:block transition-colors hover:text-foreground">
                 Hire Agent
-              </a>
+              </Link>
               <a href="/#sites" className="hidden sm:block transition-colors hover:text-foreground">
                 Sites
               </a>
