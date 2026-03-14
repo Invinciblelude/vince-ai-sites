@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { NavAuth } from "@/components/nav-auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,9 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vince Dang | Entrepreneur, Builder, AI Developer",
+  title: "Trion Express | Your AI Business Team — Answer, Log, Book 24/7",
   description:
-    "General contractor, real estate investor, and AI developer based in Sacramento. I build AI-powered systems for businesses.",
+    "Trion Express — AI agent that answers customers, captures leads, books appointments, and collects reviews. 14+ sites launched.",
 };
 
 export default function RootLayout({
@@ -25,31 +26,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
             <Link href="/" className="font-bold tracking-tight text-foreground">
-              Vince Dang
+              Trion Express
             </Link>
-            <div className="flex items-center gap-5 text-sm text-muted">
-              <a href="/#about" className="hidden sm:block transition-colors hover:text-foreground">
-                About
-              </a>
+            <div className="flex items-center gap-4 text-sm text-muted">
               <a href="/#services" className="hidden sm:block transition-colors hover:text-foreground">
                 Services
               </a>
-              <a href="/#schedule" className="transition-colors hover:text-foreground">
-                Schedule
-              </a>
+              <Link href="/sites" className="hidden sm:block transition-colors hover:text-foreground">
+                Sites
+              </Link>
               <Link
-                href="/try"
+                href="/pitch#plans"
                 className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-dim"
               >
                 Get Your Own
               </Link>
+              <NavAuth />
             </div>
           </div>
         </nav>

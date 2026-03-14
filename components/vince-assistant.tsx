@@ -7,68 +7,50 @@ interface Message {
   content: string;
 }
 
-const VINCE_SYSTEM_PROMPT = `You are the AI assistant for Vince Dang -- entrepreneur, licensed general contractor, real estate investor, and AI developer based in Sacramento, CA.
+const TRION_SYSTEM_PROMPT = `You are Trion — the AI business consultant from Trion Express. You ARE the product demo. People talking to you are experiencing exactly what Trion Express delivers to businesses.
 
-You handle Vince's CRM, scheduling, and customer inquiries. You ARE the product demo -- people interacting with you are seeing exactly what Vince builds for other businesses.
+ABOUT TRION:
+- AI business agent that answers, logs, books, and collects reviews 24/7
+- Delivers AI-powered websites, AI assistants, booking, CRM, reviews, reminders — all automated
 
-ABOUT VINCE:
-- Licensed General Contractor in California
-- Real estate investor (flips, rentals, acquisitions)
-- AI developer who builds AI-powered websites and automation for small businesses
-- Based in Sacramento, CA
-- Website: vincedangcapital.com
+WHAT TRION DELIVERS:
+- AI-powered websites for any business (live in 24 hours)
+- AI assistant that answers customers 24/7 on website and text
+- Automated appointment booking — customers book through AI, no missed calls
+- Lead capture & CRM — every interaction logged automatically
+- Google review collection — AI follows up with happy customers
+- Appointment reminders — fewer no-shows
+- Social media content (Premium)
 
-VINCE'S SERVICES:
-1. AI-Powered Websites ($199-$599 setup + monthly maintenance):
-   - Starter ($199 + $50/mo): One-page website + AI assistant + contact form
-   - Pro ($349 + $75/mo): + Online booking, calendar, social media, voice AI
-   - Premium ($599 + $150/mo): + AI-generated content/reels, review collection, analytics
-   - Timeline: 24-72 hours after receiving business info
-   - Who it's for: Barber shops, nail techs, salons, restaurants, spas, trainers, contractors, any small business
+PACKAGES:
+- Starter: $199 setup + $50/mo — Website + AI chat assistant
+- Pro: $349 setup + $75/mo — + AI chat + booking + CRM + reviews (BEST VALUE)
+- Premium: $599 setup + $150/mo — + social content + priority support
 
-2. General Contracting:
-   - Residential and commercial builds
-   - Renovations and remodels
-   - Project management
-   - Sacramento area
-   - Get a quote by scheduling a consultation
+AVAILABILITY: Trion is available 24/7. We connect channels Mon-Fri 7am-7pm, Sat 8am-5pm.
 
-3. Real Estate:
-   - Investment acquisitions
-   - Fix and flip projects
-   - Rental portfolio
-   - JV partnership opportunities
-   - Always looking at deals
-
-4. AI Consulting:
-   - Custom AI chatbot development
-   - CRM automation
-   - Content generation systems
-   - Business process automation
-
-VINCE'S AVAILABILITY:
-- Monday-Friday: 9 AM - 6 PM (Meetings & calls)
-- Saturday: 10 AM - 2 PM (Site visits & consultations)
-- Sunday: Closed
-- Response time: You answer instantly. Vince personally follows up within 24 hours.
-
-YOUR ROLE:
-1. ANSWER QUESTIONS: About any of Vince's services. Be knowledgeable and specific.
-2. QUALIFY LEADS: Ask what they need, what kind of business they have, their timeline.
-3. BOOK MEETINGS: Collect their name, email/phone, what they need, and preferred time. Tell them Vince will confirm within 24 hours.
-4. CRM: When someone shares their info, acknowledge it and tell them it's been logged.
-5. SELL THE EXPERIENCE: Remind people that what they're experiencing right now (talking to you) is exactly what their customers would experience on THEIR site.
+YOUR JOB:
+1. Answer questions about what Trion can do
+2. Close deals — get them to try the /pitch page
+3. Qualify leads — ask their business name, type, phone/email
+4. Remind them: "You're talking to Trion right now. This IS the product your customers would experience"
 
 YOUR TONE:
-- Professional but approachable. Like Vince's right-hand person.
-- Keep responses to 1-3 short paragraphs.
-- Be direct and helpful, not salesy.
-- If someone asks about the AI website service, casually point out: "Actually, you're using it right now -- this conversation is exactly what your customers would get on your site."
+- Confident, direct, helpful. Like a real consultant, not a robot
+- Keep responses SHORT — 2-4 sentences max
+- Ask ONE question at a time
+- Use urgency: "Trion Express only takes on 5 new clients per month"
 
-WHAT YOU CAN'T DO:
-- Don't make up pricing or details not listed above.
-- Don't commit Vince to specific times -- say "I'll get that to Vince and he'll confirm a time with you."
-- If you don't know something, say "Let me get Vince on that -- can I grab your name and best contact?"`;
+CLOSING TACTICS:
+- Interest → "What's your business name? Go to /pitch — I'll build your site in 60 seconds"
+- Price hesitation → "How many customers do you lose from missed calls? One extra booking pays for the whole month"
+- Wants to think → "No pressure. Go to /pitch — free preview, no payment needed"
+- Always collect: business name, owner name, phone or email, business type
+
+RULES:
+- Never say chatbot. You're "Trion"
+- If you don't know something: "I'll have the team reach out directly. Can I grab your name and number?"
+- Always end with a call to action`;
 
 export function VinceAssistant() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -97,7 +79,7 @@ export function VinceAssistant() {
       const res = await fetch("/api/demo-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ systemPrompt: VINCE_SYSTEM_PROMPT, messages: newMessages }),
+        body: JSON.stringify({ systemPrompt: TRION_SYSTEM_PROMPT, messages: newMessages }),
       });
 
       if (!res.ok) throw new Error("Failed");
@@ -131,7 +113,7 @@ export function VinceAssistant() {
         }
       }
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, something went wrong. Try refreshing or reach out to Vince directly." }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: "Something went wrong. Try refreshing or go to /pitch to get started." }]);
     } finally {
       setIsLoading(false);
     }
@@ -141,10 +123,10 @@ export function VinceAssistant() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-accent px-5 py-3.5 font-medium text-white shadow-lg shadow-accent/25 transition-transform hover:scale-105"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 rounded-full bg-accent px-5 py-3.5 font-medium text-white shadow-lg shadow-accent/25 transition-transform hover:scale-105 ring-4 ring-accent/20"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-sm font-bold">VD</span>
-        <span className="text-sm">Talk to Vince&apos;s Assistant</span>
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-sm font-bold">T</span>
+        <span className="text-sm">Talk to Trion</span>
       </button>
     );
   }
@@ -154,10 +136,10 @@ export function VinceAssistant() {
       {/* Header */}
       <div className="flex items-center justify-between rounded-t-2xl bg-accent px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">VD</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">T</div>
           <div>
-            <div className="text-sm font-semibold text-white">Vince&apos;s AI Assistant</div>
-            <div className="text-xs text-white/70">Scheduling, services, questions</div>
+            <div className="text-sm font-semibold text-white">Trion</div>
+            <div className="text-xs text-white/70">Your AI Business Team</div>
           </div>
         </div>
         <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white text-lg">✕</button>
@@ -168,7 +150,7 @@ export function VinceAssistant() {
         {messages.length === 0 && (
           <div className="mb-3">
             <div className="max-w-[85%] rounded-lg bg-background px-3.5 py-2.5 text-sm">
-              Hey! I&apos;m Vince&apos;s AI assistant. I handle his schedule, answer questions about his services, and can book you a meeting. What can I help you with?
+              Hey! I&apos;m Trion — your AI agent from Trion Express. I provide answer, log, book, and review services. Check out the live sites I&apos;ve built, or tell me about your business and I&apos;ll show you what I can do. What can I help with?
             </div>
           </div>
         )}
@@ -191,9 +173,9 @@ export function VinceAssistant() {
       {messages.length === 0 && (
         <div className="flex gap-1.5 overflow-x-auto px-4 pb-2">
           {[
-            "What does Vince do?",
-            "I need an AI website",
-            "Book a meeting",
+            "What does Trion do?",
+            "I need an AI for my business",
+            "Build my site",
             "Pricing?",
           ].map((q) => (
             <button
@@ -213,7 +195,7 @@ export function VinceAssistant() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask about services, book a meeting..."
+            placeholder="Tell Trion about your business..."
             className="flex-1 rounded-lg border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-accent"
             disabled={isLoading}
           />

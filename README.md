@@ -1,8 +1,24 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Trion Express
+
+Trion Express — AI business team (answer, log, book, review). Home, pitch demo, live sites, client dashboard. Built with Next.js. Deploy at trionexpress.com.
+
+## Key Pages
+
+- **/** — Home (services, Trion AI assistant)
+- **/pitch** — Trion demo: talk to Trion, get a site preview, go live
+- **/sites** — 14+ Trion-built sites (sign up required)
+- **/clients** — Client Dashboard (private — only `ADMIN_EMAIL` can access)
+- **/login** — Sign up / log in (Google OAuth)
+
+## Agent End-to-End
+
+See [docs/AGENT-END-TO-END.md](docs/AGENT-END-TO-END.md) for how Trion agents perform answer, log, and book actions via skills and OpenClaw.
 
 ## Getting Started
 
-First, run the development server:
+1. Copy `.env.example` to `.env.local` and fill in your values.
+2. Set `ADMIN_EMAIL` to your Google account email so only you can access `/clients`.
+3. Run the development server:
 
 ```bash
 npm run dev

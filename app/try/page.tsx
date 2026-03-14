@@ -11,6 +11,8 @@ interface BusinessInfo {
   hours: string;
   location: string;
   phone: string;
+  email: string;
+  instagram: string;
   vibe: string;
 }
 
@@ -27,6 +29,8 @@ const EMPTY_BIZ: BusinessInfo = {
   hours: "",
   location: "",
   phone: "",
+  email: "",
+  instagram: "",
   vibe: "professional",
 };
 
@@ -50,11 +54,13 @@ YOUR BEHAVIOR:
 }
 
 export default function TryPage() {
-  const [step, setStep] = useState<"form" | "preview">("form");
+  const [step, setStep] = useState<"form" | "preview" | "signup" | "done">("form");
   const [biz, setBiz] = useState<BusinessInfo>(EMPTY_BIZ);
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState("pro");
+  const [isSaving, setIsSaving] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -68,6 +74,24 @@ export default function TryPage() {
     if (!biz.businessName.trim() || !biz.type.trim()) return;
     setStep("preview");
     setMessages([]);
+  }
+
+  async function handleGoLive() {
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/save-client", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...biz, package: selectedPackage }),
+      });
+      if (res.ok) {
+        setStep("done");
+      }
+    } catch {
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   async function handleChat(e: React.FormEvent) {
@@ -126,11 +150,129 @@ export default function TryPage() {
 
   const serviceLines = biz.services.split("\n").filter((l) => l.trim());
 
+  if (step === "done") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-24 text-center animate-fade-in">
+        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green/10 text-4xl">
+          &#10003;
+        </div>
+        <h1 className="mb-3 text-3xl font-bold">You&apos;re All Set!</h1>
+        <p className="mb-2 text-lg text-muted">
+          <strong>{biz.businessName}</strong> has been submitted.
+        </p>
+        <p className="mb-8 text-muted">
+          We&apos;ll build your full AI-powered site and have it live within 24 hours.
+          You&apos;ll get an email with your live link, login, and setup details.
+        </p>
+        <div className="mb-8 rounded-xl border border-border bg-card p-6 text-left text-sm">
+          <h3 className="mb-3 font-bold">What happens next:</h3>
+          <ol className="space-y-2 text-muted list-decimal list-inside">
+            <li>We review your info and build your custom site</li>
+            <li>Your AI assistant gets trained on your business</li>
+            <li>Social channels get connected (Pro+)</li>
+            <li>You get a link to review before going live</li>
+            <li>Site goes live on your domain within 24 hours</li>
+          </ol>
+        </div>
+        <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link href="/" className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-colors hover:bg-accent-dim">
+            Back to Home
+          </Link>
+          <button onClick={() => { setStep("form"); setBiz(EMPTY_BIZ); }} className="rounded-xl border border-border px-8 py-3.5 font-semibold transition-colors hover:bg-card">
+            Submit Another Business
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "signup") {
+    const packagePrices: Record<string, { setup: string; monthly: string }> = {
+      starter: { setup: "$199", monthly: "$50/mo" },
+      pro: { setup: "$349", monthly: "$75/mo" },
+      premium: { setup: "$599", monthly: "$150/mo" },
+    };
+    const pkg = packagePrices[selectedPackage] || packagePrices.pro;
+
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 animate-fade-in">
+        <button onClick={() => setStep("preview")} className="mb-8 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
+          &larr; Back to preview
+        </button>
+        <h1 className="mb-2 text-3xl font-bold">Go Live</h1>
+        <p className="mb-8 text-muted">
+          Confirm your details and we&apos;ll have <strong>{biz.businessName}</strong> live within 24 hours.
+        </p>
+
+        <div className="mb-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-bold text-lg">{selectedPackage.charAt(0).toUpperCase() + selectedPackage.slice(1)} Package</div>
+              <div className="text-sm text-muted">{pkg.setup} setup &middot; {pkg.monthly} maintenance</div>
+            </div>
+            <button onClick={() => setStep("preview")} className="text-sm text-accent hover:underline">Change</button>
+          </div>
+        </div>
+
+        <div className="mb-6 rounded-xl border border-border bg-card p-5 space-y-3 text-sm">
+          <div className="grid grid-cols-2 gap-2">
+            <div><span className="text-muted">Business:</span> {biz.businessName}</div>
+            <div><span className="text-muted">Owner:</span> {biz.ownerName}</div>
+            <div><span className="text-muted">Type:</span> {biz.type}</div>
+            <div><span className="text-muted">Vibe:</span> {biz.vibe}</div>
+            {biz.location && <div><span className="text-muted">Location:</span> {biz.location}</div>}
+            {biz.phone && <div><span className="text-muted">Phone:</span> {biz.phone}</div>}
+          </div>
+          {biz.services && (
+            <div>
+              <span className="text-muted">Services:</span>
+              <div className="mt-1 text-xs bg-background rounded p-2 font-mono whitespace-pre-wrap">{biz.services}</div>
+            </div>
+          )}
+        </div>
+
+        <div className="mb-6 space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium">Email *</label>
+            <input
+              required
+              value={biz.email}
+              onChange={(e) => setBiz({ ...biz, email: e.target.value })}
+              placeholder="you@email.com"
+              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-accent"
+            />
+            <p className="mt-1 text-xs text-muted">We&apos;ll send your live site link here</p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Instagram (optional)</label>
+            <input
+              value={biz.instagram}
+              onChange={(e) => setBiz({ ...biz, instagram: e.target.value })}
+              placeholder="@yourhandle"
+              className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-accent"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleGoLive}
+          disabled={!biz.email.trim() || isSaving}
+          className="w-full rounded-xl bg-accent py-3.5 text-base font-semibold text-white transition-colors hover:bg-accent-dim disabled:opacity-50"
+        >
+          {isSaving ? "Submitting..." : `Confirm & Go Live`}
+        </button>
+        <p className="mt-3 text-center text-xs text-muted">
+          We&apos;ll reach out within 24 hours to finalize and launch your site.
+        </p>
+      </div>
+    );
+  }
+
   if (step === "form") {
     return (
       <div className="mx-auto max-w-2xl px-4 py-16 animate-fade-in">
         <Link href="/" className="mb-8 inline-flex items-center gap-1 text-sm text-muted hover:text-foreground transition-colors">
-          &larr; Back to Vince&apos;s site
+          &larr; Back to Home
         </Link>
         <h1 className="mb-2 text-3xl font-bold">Build Your AI Site</h1>
         <p className="mb-8 text-muted">
@@ -165,8 +307,9 @@ export default function TryPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1 block text-sm font-medium">Business Type *</label>
+              <label htmlFor="biz-type" className="mb-1 block text-sm font-medium">Business Type *</label>
               <select
+                id="biz-type"
                 required
                 value={biz.type}
                 onChange={(e) => setBiz({ ...biz, type: e.target.value })}
@@ -185,8 +328,9 @@ export default function TryPage() {
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Vibe / Style</label>
+              <label htmlFor="biz-vibe" className="mb-1 block text-sm font-medium">Vibe / Style</label>
               <select
+                id="biz-vibe"
                 value={biz.vibe}
                 onChange={(e) => setBiz({ ...biz, vibe: e.target.value })}
                 className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-accent"
@@ -241,6 +385,27 @@ export default function TryPage() {
               placeholder="Mon-Fri 9am-7pm, Sat 8am-5pm, Sun Closed"
               className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-accent"
             />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Email</label>
+              <input
+                value={biz.email}
+                onChange={(e) => setBiz({ ...biz, email: e.target.value })}
+                placeholder="you@email.com"
+                className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-accent"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Instagram</label>
+              <input
+                value={biz.instagram}
+                onChange={(e) => setBiz({ ...biz, instagram: e.target.value })}
+                placeholder="@yourhandle"
+                className="w-full rounded-lg border border-border bg-card px-4 py-2.5 text-sm outline-none focus:border-accent"
+              />
+            </div>
           </div>
 
           <button
@@ -316,7 +481,7 @@ export default function TryPage() {
               <input placeholder="Your name" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
               <input placeholder="Phone or email" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
               {serviceLines.length > 0 && (
-                <select className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent">
+                <select aria-label="Select a service" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent">
                   <option value="">Select a service...</option>
                   {serviceLines.map((line, i) => {
                     const name = line.split(/[-$]/)[0].trim();
@@ -353,32 +518,75 @@ export default function TryPage() {
         <section className="mb-16 rounded-2xl border border-accent/20 bg-gradient-to-br from-accent/5 to-green/5 p-8 text-center">
           <h3 className="mb-2 text-2xl font-bold">Like What You See?</h3>
           <p className="mx-auto mb-6 max-w-lg text-sm text-muted">
-            This preview was generated from your info in seconds. To go live with your
-            own domain, full AI assistant, booking system, and social media integration,
-            pick a package and Vince will have you up within 24 hours.
+            This preview was generated from your info in seconds. Pick a package
+            and we&apos;ll have your full AI-powered site live within 24 hours --
+            with booking, social media, and CRM all connected.
           </p>
+
+          <div className="mt-6 mb-6 grid gap-3 sm:grid-cols-3 text-sm">
+            <button
+              onClick={() => setSelectedPackage("starter")}
+              className={`rounded-lg p-4 text-left transition-all ${
+                selectedPackage === "starter"
+                  ? "border-2 border-accent bg-accent/5"
+                  : "border border-border bg-card hover:border-accent/50"
+              }`}
+            >
+              <div className="font-bold text-base">Starter</div>
+              <div className="text-accent font-semibold mt-1">$199 setup + $50/mo</div>
+              <ul className="mt-2 text-xs text-muted space-y-0.5">
+                <li>AI-powered website</li>
+                <li>Chat assistant</li>
+                <li>Basic booking</li>
+              </ul>
+            </button>
+            <button
+              onClick={() => setSelectedPackage("pro")}
+              className={`rounded-lg p-4 text-left transition-all relative ${
+                selectedPackage === "pro"
+                  ? "border-2 border-accent bg-accent/5"
+                  : "border border-border bg-card hover:border-accent/50"
+              }`}
+            >
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-green px-2.5 py-0.5 text-[10px] font-bold text-white">POPULAR</div>
+              <div className="font-bold text-base">Pro</div>
+              <div className="text-accent font-semibold mt-1">$349 setup + $75/mo</div>
+              <ul className="mt-2 text-xs text-muted space-y-0.5">
+                <li>Everything in Starter</li>
+                <li>Instagram AI</li>
+                <li>CRM + lead capture</li>
+                <li>Review collection</li>
+              </ul>
+            </button>
+            <button
+              onClick={() => setSelectedPackage("premium")}
+              className={`rounded-lg p-4 text-left transition-all ${
+                selectedPackage === "premium"
+                  ? "border-2 border-accent bg-accent/5"
+                  : "border border-border bg-card hover:border-accent/50"
+              }`}
+            >
+              <div className="font-bold text-base">Premium</div>
+              <div className="text-accent font-semibold mt-1">$599 setup + $150/mo</div>
+              <ul className="mt-2 text-xs text-muted space-y-0.5">
+                <li>Everything in Pro</li>
+                <li>Social media content</li>
+                <li>AI-generated reels</li>
+                <li>Priority support</li>
+              </ul>
+            </button>
+          </div>
+
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a href="/#schedule" className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-colors hover:bg-accent-dim">
-              Talk to Vince
-            </a>
+            <button
+              onClick={() => setStep("signup")}
+              className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-colors hover:bg-accent-dim"
+            >
+              Go Live with {selectedPackage.charAt(0).toUpperCase() + selectedPackage.slice(1)}
+            </button>
             <button onClick={() => setStep("form")} className="rounded-xl border border-border px-8 py-3.5 font-semibold transition-colors hover:bg-card">
               Edit My Info
             </button>
-          </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-3 text-sm">
-            <div className="rounded-lg border border-border bg-card p-3">
-              <div className="font-bold">Starter</div>
-              <div className="text-accent">$199 + $50/mo</div>
-            </div>
-            <div className="rounded-lg border border-accent bg-accent/5 p-3">
-              <div className="font-bold">Pro</div>
-              <div className="text-accent">$349 + $75/mo</div>
-              <div className="text-[10px] text-green font-medium">MOST POPULAR</div>
-            </div>
-            <div className="rounded-lg border border-border bg-card p-3">
-              <div className="font-bold">Premium</div>
-              <div className="text-accent">$599 + $150/mo</div>
-            </div>
           </div>
         </section>
       </div>
