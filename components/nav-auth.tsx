@@ -43,9 +43,14 @@ export function NavAuth() {
     return (
       <div className="flex items-center gap-3">
         {isAdmin && (
-          <Link href="/clients" className="hidden sm:block text-sm text-muted transition-colors hover:text-foreground">
-            Dashboard
-          </Link>
+          <>
+            <Link href="/dashboard" className="hidden sm:block text-sm text-muted transition-colors hover:text-foreground">
+              Dashboard
+            </Link>
+            <Link href="/clients" className="hidden sm:block text-sm text-muted transition-colors hover:text-foreground">
+              Clients
+            </Link>
+          </>
         )}
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">

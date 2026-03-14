@@ -1,7 +1,7 @@
--- Run this in Supabase SQL Editor to create demo tables for pitch page
--- These store leads and bookings from the Trion Express demo
+-- Run this ONCE in Supabase SQL Editor
+-- Creates demo tables + policies for Trion Express pitch page and dashboard
 
--- Demo leads (interests from chat)
+-- 1. Create tables
 CREATE TABLE IF NOT EXISTS demo_leads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT,
@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS demo_leads (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Demo form submissions (Tell Me About You data)
 CREATE TABLE IF NOT EXISTS demo_form_submissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   business_name TEXT,
@@ -28,10 +27,6 @@ CREATE TABLE IF NOT EXISTS demo_form_submissions (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-ALTER TABLE demo_form_submissions ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow insert demo_form_submissions" ON demo_form_submissions FOR INSERT WITH CHECK (true);
-
--- Demo bookings (session bookings from pitch form)
 CREATE TABLE IF NOT EXISTS demo_bookings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -44,16 +39,30 @@ CREATE TABLE IF NOT EXISTS demo_bookings (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Allow anonymous inserts for demo (no auth required)
+-- 2. Enable RLS
 ALTER TABLE demo_leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE demo_form_submissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE demo_bookings ENABLE ROW LEVEL SECURITY;
 
+-- 3. INSERT policies (anyone can insert from pitch page)
 CREATE POLICY "Allow insert demo_leads" ON demo_leads FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow insert demo_form_submissions" ON demo_form_submissions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow insert demo_bookings" ON demo_bookings FOR INSERT WITH CHECK (true);
 
--- Allow authenticated users to read (dashboard uses admin auth)
-CREATE POLICY "Allow select demo_leads" ON demo_leads FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow select demo_bookings" ON demo_bookings FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Allow select demo_form_submissions" ON demo_form_submissions FOR SELECT USING (auth.role() = 'authenticated');
+-- Conversation messages (full chat log)
+CREATE TABLE IF NOT EXISTS demo_conversation_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id TEXT,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
 
--- Alternative: use SUPABASE_SERVICE_ROLE_KEY in .env for /api/demo-dashboard (bypasses RLS, no policies needed)
+ALTER TABLE demo_conversation_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow insert demo_conversation_messages" ON demo_conversation_messages FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow select demo_conversation_messages" ON demo_conversation_messages FOR SELECT USING (auth.role() = 'authenticated');
+
+-- 4. SELECT policies (authenticated admin can read in dashboard)
+CREATE POLICY "Allow select demo_leads" ON demo_leads FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow select demo_form_submissions" ON demo_form_submissions FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow select demo_bookings" ON demo_bookings FOR SELECT USING (auth.role() = 'authenticated');

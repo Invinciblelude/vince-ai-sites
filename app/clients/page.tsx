@@ -59,6 +59,12 @@ export default function ClientsDashboard() {
         </div>
         <div className="flex gap-2">
           <Link
+            href="/dashboard"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium transition-colors hover:bg-background"
+          >
+            Sign-ups & Calendar
+          </Link>
+          <Link
             href="/try"
             className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-accent-dim"
           >

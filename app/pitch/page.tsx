@@ -276,6 +276,9 @@ export default function PitchPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const lastFormSaveRef = useRef<string>("");
+  const [sessionId] = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `s-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  );
 
   const { isListening, supported, toggle } = useSpeechToText((text) => setInput(text));
 
@@ -354,7 +357,13 @@ export default function PitchPage() {
         biz.phone && `Phone: ${biz.phone}`,
       ].filter(Boolean).join(" · ");
       if (summary) {
-        setDemoDiscussionLog((prev) => [...prev, { role: "user", text: `Form entered: ${summary}`, at: new Date().toLocaleTimeString() }]);
+        const formNote = `Form entered: ${summary}`;
+        setDemoDiscussionLog((prev) => [...prev, { role: "user", text: formNote, at: new Date().toLocaleTimeString() }]);
+        fetch("/api/demo-conversation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId, role: "user", content: formNote }),
+        }).catch(() => {});
         fetch("/api/demo-form", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -441,6 +450,12 @@ export default function PitchPage() {
     const trimmed = text.trim().slice(0, 500);
     if (!trimmed) return;
     setDemoDiscussionLog((prev) => [...prev, { role, text: trimmed, at: new Date().toLocaleTimeString() }]);
+    // Persist to backend
+    fetch("/api/demo-conversation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, role, content: text.trim().slice(0, 10000) }),
+    }).catch(() => {});
   }
 
   async function saveLeadToBackend(interest: string) {
@@ -474,7 +489,7 @@ export default function PitchPage() {
     form.reset();
     setBookingLoading(false);
     setTimeout(() => setBookingSuccess(false), 3000);
-    // Save to backend in background
+    // Save to backend + show error if it fails
     fetch("/api/demo-booking", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -486,7 +501,12 @@ export default function PitchPage() {
         time,
         topic,
       }),
-    }).catch(() => { /* ignore */ });
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) console.error("Booking save failed:", data.error);
+      })
+      .catch((e) => console.error("Booking save failed:", e));
   }
 
   async function handleChat(e: React.FormEvent) {

@@ -31,7 +31,9 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthPage = request.nextUrl.pathname === "/login";
   const isProtectedPage =
-    request.nextUrl.pathname === "/clients" || request.nextUrl.pathname === "/sites";
+    request.nextUrl.pathname === "/clients" ||
+    request.nextUrl.pathname === "/dashboard" ||
+    request.nextUrl.pathname === "/sites";
 
   if (!user && isProtectedPage) {
     const url = request.nextUrl.clone();
@@ -40,8 +42,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Client Dashboard is private — only ADMIN_EMAIL can access
-  if (user && request.nextUrl.pathname === "/clients") {
+  // Client Dashboard and Dashboard are private — only ADMIN_EMAIL can access
+  if (user && (request.nextUrl.pathname === "/clients" || request.nextUrl.pathname === "/dashboard")) {
     const adminEmail = process.env.ADMIN_EMAIL;
     if (!adminEmail || user.email !== adminEmail) {
       const url = request.nextUrl.clone();
