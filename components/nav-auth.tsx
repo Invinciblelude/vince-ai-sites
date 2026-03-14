@@ -69,7 +69,7 @@ export function NavAuth() {
       href="/login"
       className="rounded-lg border border-border px-4 py-1.5 text-sm font-medium transition-colors hover:bg-card"
     >
-      Sign in
+      Create account
     </Link>
   );
 }

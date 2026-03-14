@@ -39,15 +39,21 @@ export default function RootLayout({
               <a href="/#services" className="hidden sm:block transition-colors hover:text-foreground">
                 Services
               </a>
-              <Link href="/sites" className="hidden sm:block transition-colors hover:text-foreground">
+              <a href="/#hire-agent" className="hidden sm:block transition-colors hover:text-foreground">
+                Hire Agent
+              </a>
+              <a href="/#sites" className="hidden sm:block transition-colors hover:text-foreground">
                 Sites
-              </Link>
-              <Link
-                href="/pitch#plans"
-                className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-accent-dim"
-              >
-                Get Your Own
-              </Link>
+              </a>
+              <a href="/#analysis" className="hidden sm:block transition-colors hover:text-foreground">
+                Analysis
+              </a>
+              <a href="/#reports" className="hidden sm:block transition-colors hover:text-foreground">
+                Reports
+              </a>
+              <a href="/#pro-analysis" className="hidden sm:block transition-colors hover:text-foreground">
+                Pro
+              </a>
               <NavAuth />
             </div>
           </div>

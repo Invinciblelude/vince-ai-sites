@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { INDUSTRIES, matchIndustry, buildIndustryKnowledgeBlock, TRION_ROLES, type IndustryProfile } from "@/lib/industries";
 import { useSpeechToText } from "@/lib/use-speech-to-text";
 
@@ -44,6 +45,24 @@ function getIndustryData(bizType: string): IndustryProfile {
   const matched = matchIndustry(bizType);
   if (matched) return matched;
   return INDUSTRIES.retail;
+}
+
+/** Merge biz with industry defaults — proactive: show full preview even when client hasn't given all details */
+function getPreviewBiz(biz: BusinessInfo): BusinessInfo {
+  const typeForLookup = biz.type || "barber"; // fallback for demo preview
+  const industry = getIndustryData(typeForLookup);
+  const typeLabel = (biz.type || typeForLookup).charAt(0).toUpperCase() + (biz.type || typeForLookup).slice(1);
+  return {
+    ...biz,
+    type: biz.type || typeForLookup,
+    businessName: biz.businessName || `${typeLabel} Business`,
+    ownerName: biz.ownerName || "Owner",
+    services: biz.services || industry.services.join("\n"),
+    hours: biz.hours || industry.hours,
+    painPoints: biz.painPoints || industry.painPoints.join(", "),
+    features: biz.features || industry.aiSolves.join(", "),
+    location: biz.location || "Location TBD",
+  };
 }
 
 function getIndustryImages(bizType: string) {
@@ -152,25 +171,29 @@ ${INDUSTRY_KNOWLEDGE}
 
 If someone names a business you don't have exact data for, map to the closest industry. Welding shop → manufacturing. Florist → events + retail. Daycare → education. Towing → automotive. ALWAYS have an answer.
 
+BE PROACTIVE — BUILD FIRST, REFINE LATER:
+You build a site INSTANTLY with industry-standard details. Don't wait for every detail. As soon as you know their business type, you have enough to build. Use industry defaults for services, hours, pain points. The client can refine later.
+
 CONVERSATION FLOW (2-3 messages):
 
 MESSAGE 1: Warm greeting. Tell them Trion Express builds a full AI team for their business. Ask their business type and name. That's it.
 
-MESSAGE 2 (The CEO Consult): When they tell you their business type:
-1. Pre-fill services with realistic prices
-2. DIAGNOSE pain points specific to their industry
-3. Show them their AI TEAM — what each role does for THEIR business
-4. Recommend a package with a specific reason
-5. Ask for remaining details (location, phone, email) in one ask
+MESSAGE 2 (BUILD IMMEDIATELY — The CEO Consult): When they tell you their business type:
+1. **IMMEDIATELY include BIZDATA** with type, businessName (or placeholder), ownerName (or "Owner"), services (from industry defaults), hours (from industry), painPoints (from industry), features (from industry aiSolves). Use standard industry data — we refine per client later.
+2. Pre-fill services with realistic prices from your industry database
+3. DIAGNOSE pain points specific to their industry
+4. Show them their AI TEAM — what each role does for THEIR business
+5. **Tell them their site preview is ready** — "Hit 'Build My Site' below to see it. I've built it with standard [industry] details — we'll customize with your location, phone, and email next."
+6. Recommend a package with a specific reason
 
 Format:
-"[Name], I know [business type] inside out. Here's your Trion AI team for [Business Name]:
+"[Name], I know [business type] inside out. I've already built your site preview with standard [industry] details — **click 'Build My Site' below to see it.** Here's your Trion AI team:
 
-**Your Services:**
+**Your Services:** (from industry — they can tweak)
 - Service 1 - $XX
 (6-8 services)
 
-**Hours:** [standard]
+**Hours:** [industry standard]
 
 **What's costing you money right now:**
 - [Industry-specific pain point 1]
@@ -178,14 +201,14 @@ Format:
 - [Pain point 3]
 
 **Your AI Team:**
-🧠 CEO Brain: [What it tracks and optimizes for their business]
+🧠 CEO Brain: [What it tracks for their business]
 ⚙️ COO: [Operations it handles]
 📱 Secretary: [How it handles communication]
 🔨 Employee: [Tasks it executes daily]
 
 I'd put you on the **Pro package** — $349 setup + $75/mo. Includes AI chat, auto-booking, CRM, review collection, and all 5 AI roles active.
 
-Just need your location, phone, and email to build your site."
+**Your site preview is ready below** — build it to see. Then share your location, phone, and email and we'll customize it."
 
 MESSAGE 3: "Done — hit 'Build My Site' below. Full website with your AI team preview, service menu, booking, gallery. 60 seconds. Live with everything connected? 24 hours."
 
@@ -197,7 +220,12 @@ IF UNSURE ABOUT NEEDS:
 
 DATA EXTRACTION:
 |||BIZDATA|||{"businessName":"...","ownerName":"...","type":"...","services":"Service1 - $XX\\nService2 - $XX","hours":"...","location":"...","phone":"...","email":"...","goals":"...","painPoints":"...","features":"ceo-brain,coo-ops,cfo-revenue,secretary-comms,employee-tasks,booking,reviews,reminders,website,social"}|||END|||
-Include ALL fields you know. Include in EVERY response with data.
+- Include BIZDATA in your SECOND message as soon as you know their business type. Use industry defaults for services, hours, painPoints, features.
+- businessName: use their name or "[Type] Shop" (e.g. "Barber Shop") if unknown
+- ownerName: use their name or "Owner" if unknown
+- type: REQUIRED — barber, nail, restaurant, contractor, etc. (from industry database)
+- services, hours, painPoints, features: use industry defaults from your database when client hasn't specified
+- Include in EVERY response once you have data.
 
 RULES:
 - Think like a CEO consultant, not a form collector
@@ -228,6 +256,7 @@ function parseServiceLines(services: string) {
 }
 
 export default function PitchPage() {
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -240,12 +269,13 @@ export default function PitchPage() {
   const [agentSlug, setAgentSlug] = useState<string | null>(null);
   const [trionPrompt, setTrionPrompt] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"ai" | "plans">("ai");
-  const [demoInterests, setDemoInterests] = useState<{ text: string; at: string }[]>([]);
+  const [demoDiscussionLog, setDemoDiscussionLog] = useState<{ role: "user" | "assistant"; text: string; at: string }[]>([]);
   const [demoBookings, setDemoBookings] = useState<{ name: string; date: string; time: string; topic: string }[]>([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const lastFormSaveRef = useRef<string>("");
 
   const { isListening, supported, toggle } = useSpeechToText((text) => setInput(text));
 
@@ -278,7 +308,21 @@ export default function PitchPage() {
     }
   }, []);
 
+  // Pre-fill for analysis demo: ?analyze=URL
   useEffect(() => {
+    const url = searchParams.get("analyze");
+    if (url) {
+      setInput(`Analyze this report and give me a structured financial analysis with scenarios: ${url}`);
+      setActiveTab("ai");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    // Proactive: show Build when form has data OR chat says ready
+    if (biz.type || biz.businessName) {
+      setReadyToBuild(true);
+      return;
+    }
     if (biz.businessName && biz.ownerName && biz.type) {
       setReadyToBuild(true);
       return;
@@ -288,13 +332,79 @@ export default function PitchPage() {
       messages.length >= 2 &&
       last?.role === "assistant" &&
       (last?.content?.length ?? 0) > 80 &&
-      /build my site|hit.*build|finalize|ready.*below/i.test(last?.content ?? "");
+      /build my site|hit.*build|finalize|ready.*below|site preview is ready/i.test(last?.content ?? "");
     if (ready) setReadyToBuild(true);
   }, [biz, messages]);
 
+  // Debounced: save form to backend + log when user fills Tell Me About You
+  useEffect(() => {
+    const hasData = biz.businessName || biz.ownerName || biz.type || biz.email || biz.phone;
+    if (!hasData) return;
+    const hash = `${biz.businessName}|${biz.ownerName}|${biz.type}|${biz.email}`;
+    if (hash === lastFormSaveRef.current) return;
+    const t = setTimeout(() => {
+      lastFormSaveRef.current = hash;
+      const summary = [
+        biz.businessName && `Business: ${biz.businessName}`,
+        biz.ownerName && `Owner: ${biz.ownerName}`,
+        biz.type && `Type: ${biz.type}`,
+        biz.services && `Services: ${parseServiceLines(biz.services).length} listed`,
+        biz.location && `Location: ${biz.location}`,
+        biz.email && `Email: ${biz.email}`,
+        biz.phone && `Phone: ${biz.phone}`,
+      ].filter(Boolean).join(" · ");
+      if (summary) {
+        setDemoDiscussionLog((prev) => [...prev, { role: "user", text: `Form entered: ${summary}`, at: new Date().toLocaleTimeString() }]);
+        fetch("/api/demo-form", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessName: biz.businessName,
+            ownerName: biz.ownerName,
+            type: biz.type,
+            services: biz.services,
+            location: biz.location,
+            hours: biz.hours,
+            phone: biz.phone,
+            email: biz.email,
+            goals: biz.goals,
+            painPoints: biz.painPoints,
+            features: biz.features,
+          }),
+        }).catch(() => {});
+      }
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [biz.businessName, biz.ownerName, biz.type, biz.services, biz.location, biz.email, biz.phone]);
+
   const systemPrompt = trionPrompt ?? SALES_AGENT_PROMPT;
 
+  async function saveFormToBackend(data: BusinessInfo) {
+    const hasData = data.businessName || data.ownerName || data.type;
+    if (!hasData) return;
+    try {
+      await fetch("/api/demo-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName: data.businessName,
+          ownerName: data.ownerName,
+          type: data.type,
+          services: data.services,
+          location: data.location,
+          hours: data.hours,
+          phone: data.phone,
+          email: data.email,
+          goals: data.goals,
+          painPoints: data.painPoints,
+          features: data.features,
+        }),
+      });
+    } catch { /* ignore */ }
+  }
+
   function handleBuildSite() {
+    saveFormToBackend(biz);
     setShowPreview(true);
     setTimeout(() => {
       previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -327,10 +437,13 @@ export default function PitchPage() {
     }
   }
 
-  async function logInterest(text: string) {
-    const interest = text.trim().slice(0, 200);
-    if (!interest) return;
-    setDemoInterests((prev) => [...prev, { text: interest, at: new Date().toLocaleTimeString() }]);
+  function logToDiscussion(role: "user" | "assistant", text: string) {
+    const trimmed = text.trim().slice(0, 500);
+    if (!trimmed) return;
+    setDemoDiscussionLog((prev) => [...prev, { role, text: trimmed, at: new Date().toLocaleTimeString() }]);
+  }
+
+  async function saveLeadToBackend(interest: string) {
     try {
       await fetch("/api/demo-lead", {
         method: "POST",
@@ -338,7 +451,7 @@ export default function PitchPage() {
         body: JSON.stringify({
           name: biz.ownerName || biz.businessName || "Visitor",
           contact: biz.email || biz.phone || "",
-          interest,
+          interest: interest.trim().slice(0, 200),
         }),
       });
     } catch { /* ignore */ }
@@ -381,7 +494,8 @@ export default function PitchPage() {
     if (!input.trim() || isLoading) return;
 
     const userMsg: Message = { role: "user", content: input.trim() };
-    logInterest(input.trim());
+    logToDiscussion("user", input.trim());
+    saveLeadToBackend(input.trim());
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -434,14 +548,19 @@ export default function PitchPage() {
           ),
         }));
       }
+      logToDiscussion("assistant", cleanMessageContent(fullContent));
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Connection hiccup — try sending that again!" }]);
+      const errMsg = "Connection hiccup — try sending that again!";
+      setMessages((prev) => [...prev, { role: "assistant", content: errMsg }]);
+      logToDiscussion("assistant", errMsg);
     } finally {
       setIsLoading(false);
     }
   }
 
   const serviceLines = parseServiceLines(biz.services);
+  const previewBiz = getPreviewBiz(biz);
+  const previewServiceLines = parseServiceLines(previewBiz.services);
 
   return (
     <div className="animate-fade-in">
@@ -642,7 +761,7 @@ export default function PitchPage() {
                       onClick={handleBuildSite}
                       className="w-full rounded-xl bg-green py-3 font-semibold text-white transition-all hover:bg-green/90 hover:scale-[1.01]"
                     >
-                      Build {biz.businessName ? `"${biz.businessName}"` : "My"} AI Site Now
+                      Build {biz.businessName ? `"${biz.businessName}"` : biz.type ? `your ${biz.type}` : "My"} AI Site Now
                     </button>
                   </div>
                 )}
@@ -695,36 +814,38 @@ export default function PitchPage() {
               </div>
             </div>
 
-            {/* Sidebar — Tell Me About You */}
+            {/* Sidebar — Tell Me About You (editable by client) */}
             <div className="min-w-0">
               <div className="flex h-[520px] min-h-[400px] max-h-[70vh] flex-col rounded-2xl border border-border bg-card p-6 shadow-lg">
                 <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted">
-                  {biz.businessName ? "Your Info So Far" : "Tell Me About You"}
+                  Tell Me About You
                 </h3>
-                <div className="min-h-0 flex-1 space-y-2.5 overflow-y-auto text-sm">
-                  <InfoRow label="Business" value={biz.businessName} />
-                  <InfoRow label="Owner" value={biz.ownerName} />
-                  <InfoRow label="Type" value={biz.type} />
-                  <InfoRow label="Services" value={biz.services ? `${parseServiceLines(biz.services).length} listed` : ""} />
-                  <InfoRow label="Location" value={biz.location} />
-                  <InfoRow label="Hours" value={biz.hours} />
-                  <InfoRow label="Phone" value={biz.phone} />
-                  <InfoRow label="Email" value={biz.email} />
-                  <InfoRow label="Goals" value={biz.goals} />
-                  <InfoRow label="Pain Points" value={biz.painPoints} />
-                  <InfoRow label="AI Features" value={biz.features} />
+                <p className="mb-4 text-xs text-muted">
+                  Fill in below or chat with Trion — both update your preview.
+                </p>
+                <div className="min-h-0 flex-1 space-y-3 overflow-y-auto text-sm">
+                  <InputRow label="Business" value={biz.businessName} onChange={(v) => setBiz((p) => ({ ...p, businessName: v }))} placeholder="Your business name" />
+                  <InputRow label="Owner" value={biz.ownerName} onChange={(v) => setBiz((p) => ({ ...p, ownerName: v }))} placeholder="Your name" />
+                  <InputRow label="Type" value={biz.type} onChange={(v) => setBiz((p) => ({ ...p, type: v }))} placeholder="e.g. barber, restaurant, contractor" />
+                  <InputRow label="Services" value={biz.services} onChange={(v) => setBiz((p) => ({ ...p, services: v }))} placeholder="Haircut - $30, Color - $85 (one per line)" textarea />
+                  <InputRow label="Location" value={biz.location} onChange={(v) => setBiz((p) => ({ ...p, location: v }))} placeholder="City, address" />
+                  <InputRow label="Hours" value={biz.hours} onChange={(v) => setBiz((p) => ({ ...p, hours: v }))} placeholder="Mon-Sat 9am-6pm" />
+                  <InputRow label="Phone" value={biz.phone} onChange={(v) => setBiz((p) => ({ ...p, phone: v }))} placeholder="(555) 123-4567" />
+                  <InputRow label="Email" value={biz.email} onChange={(v) => setBiz((p) => ({ ...p, email: v }))} placeholder="you@business.com" />
+                  <InputRow label="Goals" value={biz.goals} onChange={(v) => setBiz((p) => ({ ...p, goals: v }))} placeholder="What do you want to achieve?" textarea />
+                  <InputRow label="Pain Points" value={biz.painPoints} onChange={(v) => setBiz((p) => ({ ...p, painPoints: v }))} placeholder="What's costing you time or money?" textarea />
+                  <InputRow label="AI Features" value={biz.features} onChange={(v) => setBiz((p) => ({ ...p, features: v }))} placeholder="booking, reviews, reminders..." textarea />
                 </div>
-                {readyToBuild && !showPreview && (
-                  <button
-                    onClick={handleBuildSite}
-                    className="mt-4 w-full rounded-lg bg-green/10 py-2.5 text-sm font-semibold text-green transition-colors hover:bg-green/20"
-                  >
-                    Ready to build your site!
-                  </button>
-                )}
-                {!readyToBuild && (
-                  <p className="mt-4 text-xs text-muted">
-                    Share your business name, your name, and what you do — and I&apos;ll build your sample site live.
+                <button
+                  onClick={handleBuildSite}
+                  disabled={!biz.type && !biz.businessName}
+                  className="mt-4 w-full rounded-lg bg-green py-2.5 text-sm font-semibold text-white transition-colors hover:bg-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {showPreview ? "View preview below ↓" : "Build live preview"}
+                </button>
+                {!biz.type && !biz.businessName && (
+                  <p className="mt-2 text-xs text-muted text-center">
+                    Add business name or type above to build preview.
                   </p>
                 )}
               </div>
@@ -779,13 +900,16 @@ export default function PitchPage() {
                   </div>
                 </div>
                 <div className="min-h-[140px] max-h-48 overflow-y-auto space-y-2 rounded-lg bg-background/50 p-4">
-                  {demoInterests.length === 0 ? (
-                    <p className="text-sm text-muted">Topics from your chat appear here as you send messages above.</p>
+                  {demoDiscussionLog.length === 0 ? (
+                    <p className="text-sm text-muted">Full conversation (you + Trion) appears here as you chat above.</p>
                   ) : (
-                    demoInterests.map((item, i) => (
-                      <div key={i} className="flex gap-3 rounded-lg bg-background px-3 py-2.5">
+                    demoDiscussionLog.map((item, i) => (
+                      <div key={i} className={`flex gap-3 rounded-lg px-3 py-2.5 ${item.role === "user" ? "bg-accent/10 border-l-2 border-accent" : "bg-background"}`}>
                         <span className="shrink-0 text-xs text-muted">{item.at}</span>
-                        <span className="text-sm line-clamp-2">{item.text}</span>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-medium uppercase text-muted">{item.role}</span>
+                          <p className="text-sm line-clamp-3 mt-0.5">{item.text}</p>
+                        </div>
                       </div>
                     ))
                   )}
@@ -858,29 +982,29 @@ export default function PitchPage() {
           ) : (
             <div>
               {(() => {
-                const imgs = getIndustryImages(biz.type);
+                const imgs = getIndustryImages(previewBiz.type);
                 return (
                   <>
                     {/* Hero banner with image */}
                     <div className="relative h-[400px] w-full overflow-hidden">
                       <img
                         src={imgs.hero}
-                        alt={`${biz.type} business`}
+                        alt={`${previewBiz.type} business`}
                         className="h-full w-full object-cover"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                       <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 text-center px-4">
                         <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border-4 border-white/20 bg-background/80 backdrop-blur text-3xl font-bold" style={{ color: imgs.accent }}>
-                          {biz.businessName.charAt(0)?.toUpperCase() || "?"}
+                          {previewBiz.businessName.charAt(0)?.toUpperCase() || "?"}
                         </div>
-                        <h2 className="mb-2 text-4xl font-bold text-white drop-shadow-lg">{biz.businessName || "Your Business"}</h2>
-                        <p className="text-white/80">{biz.type}{biz.location ? ` \u2022 ${biz.location}` : ""}</p>
+                        <h2 className="mb-2 text-4xl font-bold text-white drop-shadow-lg">{previewBiz.businessName || "Your Business"}</h2>
+                        <p className="text-white/80">{previewBiz.type}{previewBiz.location ? ` \u2022 ${previewBiz.location}` : ""}</p>
                         <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                          {biz.hours && (
-                            <span className="rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-sm text-white">{biz.hours}</span>
+                          {previewBiz.hours && (
+                            <span className="rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-sm text-white">{previewBiz.hours}</span>
                           )}
-                          {biz.phone && (
-                            <a href={`tel:${biz.phone}`} className="rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-sm text-white hover:bg-white/20 transition-colors">{biz.phone}</a>
+                          {previewBiz.phone && (
+                            <a href={`tel:${previewBiz.phone}`} className="rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-sm text-white hover:bg-white/20 transition-colors">{previewBiz.phone}</a>
                           )}
                         </div>
                       </div>
@@ -888,11 +1012,11 @@ export default function PitchPage() {
 
                     <div className="mx-auto max-w-4xl px-4 py-12">
                       {/* Services with image accents */}
-                      {serviceLines.length > 0 && (
+                      {previewServiceLines.length > 0 && (
                         <section className="mb-16">
                           <h3 className="mb-6 text-center text-2xl font-bold">Our Services</h3>
                           <div className="grid gap-4 sm:grid-cols-2">
-                            {serviceLines.map((line, i) => {
+                            {previewServiceLines.map((line, i) => {
                               const dollarIdx = line.lastIndexOf("$");
                               const dashIdx = line.lastIndexOf("-");
                               let name = line, price = "";
@@ -931,7 +1055,7 @@ export default function PitchPage() {
                             <div key={i} className="group aspect-square overflow-hidden rounded-xl">
                               <img
                                 src={src}
-                                alt={`${biz.businessName} gallery ${i + 1}`}
+                                alt={`${previewBiz.businessName} gallery ${i + 1}`}
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                               />
                             </div>
@@ -945,7 +1069,7 @@ export default function PitchPage() {
                           <div className="overflow-hidden rounded-2xl">
                             <img
                               src={imgs.gallery[0]}
-                              alt={`Book at ${biz.businessName}`}
+                              alt={`Book at ${previewBiz.businessName}`}
                               className="h-full w-full object-cover"
                             />
                           </div>
@@ -955,10 +1079,10 @@ export default function PitchPage() {
                             <div className="space-y-3">
                               <input placeholder="Your name" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
                               <input placeholder="Phone or email" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
-                              {serviceLines.length > 0 && (
+                              {previewServiceLines.length > 0 && (
                                 <select aria-label="Select a service" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent">
                                   <option value="">Select a service...</option>
-                                  {serviceLines.map((line, i) => <option key={i}>{line.split(/[-$]/)[0].trim()}</option>)}
+                                  {previewServiceLines.map((line, i) => <option key={i}>{line.split(/[-$]/)[0].trim()}</option>)}
                                 </select>
                               )}
                               <input placeholder="Preferred date & time" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
@@ -972,13 +1096,13 @@ export default function PitchPage() {
 
                       {/* Info cards */}
                       <section className="mb-16 grid gap-4 sm:grid-cols-3">
-                        {biz.hours && (
+                        {previewBiz.hours && (
                           <div className="rounded-xl border border-border bg-card p-6">
                             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg text-lg" style={{ backgroundColor: `${imgs.accent}20`, color: imgs.accent }}>
                               <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
                             </div>
                             <h3 className="mb-1 font-bold">Hours</h3>
-                            <p className="text-sm text-muted">{biz.hours}</p>
+                            <p className="text-sm text-muted">{previewBiz.hours}</p>
                           </div>
                         )}
                         <div className="rounded-xl border border-border bg-card p-6">
@@ -987,9 +1111,9 @@ export default function PitchPage() {
                           </div>
                           <h3 className="mb-1 font-bold">Location</h3>
                           <div className="text-sm text-muted">
-                            <p>{biz.location || "Location TBD"}</p>
-                            {biz.phone && <p className="mt-1">{biz.phone}</p>}
-                            {biz.email && <p className="mt-1">{biz.email}</p>}
+                            <p>{previewBiz.location || "Location TBD"}</p>
+                            {previewBiz.phone && <p className="mt-1">{previewBiz.phone}</p>}
+                            {previewBiz.email && <p className="mt-1">{previewBiz.email}</p>}
                           </div>
                         </div>
                         <div className="rounded-xl border border-border bg-card p-6">
@@ -1002,11 +1126,11 @@ export default function PitchPage() {
                       </section>
 
                       {/* What Your AI Solves */}
-                      {(biz.painPoints || biz.features) && (
+                      {(previewBiz.painPoints || previewBiz.features) && (
                         <section className="mb-16">
                           <h3 className="mb-6 text-center text-2xl font-bold">What Your AI Employee Handles</h3>
                           <div className="grid gap-4 sm:grid-cols-2">
-                            {biz.painPoints && biz.painPoints.split(",").map((point) => (
+                            {previewBiz.painPoints && previewBiz.painPoints.split(",").map((point) => (
                               <div key={point} className="flex items-start gap-3 rounded-xl border border-red-500/10 bg-red-500/5 p-4">
                                 <span className="mt-0.5 text-red-400">&#10007;</span>
                                 <div>
@@ -1015,7 +1139,7 @@ export default function PitchPage() {
                                 </div>
                               </div>
                             ))}
-                            {biz.features && biz.features.split(",").map((feat) => (
+                            {previewBiz.features && previewBiz.features.split(",").map((feat) => (
                               <div key={feat} className="flex items-start gap-3 rounded-xl border p-4" style={{ borderColor: `${imgs.accent}20`, backgroundColor: `${imgs.accent}08` }}>
                                 <span className="mt-0.5" style={{ color: imgs.accent }}>&#10003;</span>
                                 <div>
@@ -1033,10 +1157,10 @@ export default function PitchPage() {
                         <div className="mx-auto max-w-md rounded-2xl border bg-card p-6 shadow-lg" style={{ borderColor: `${imgs.accent}30` }}>
                           <div className="flex items-center gap-3 mb-4">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white" style={{ backgroundColor: imgs.accent }}>
-                              {biz.businessName.charAt(0)?.toUpperCase() || "A"}
+                              {previewBiz.businessName.charAt(0)?.toUpperCase() || "A"}
                             </div>
                             <div>
-                              <div className="text-sm font-semibold">{biz.businessName} AI</div>
+                              <div className="text-sm font-semibold">{previewBiz.businessName} AI</div>
                               <div className="flex items-center gap-1 text-xs text-green">
                                 <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green"></span></span>
                                 Online 24/7
@@ -1045,7 +1169,7 @@ export default function PitchPage() {
                           </div>
                           <div className="space-y-2 mb-4">
                             <div className="rounded-lg bg-background px-3 py-2 text-sm">
-                              Hey! Welcome to {biz.businessName}. I can help you book an appointment, answer questions about our services, or anything else. What would you like to do?
+                              Hey! Welcome to {previewBiz.businessName}. I can help you book an appointment, answer questions about our services, or anything else. What would you like to do?
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {["Book appointment", "See services", "Hours & location"].map((q) => (
@@ -1249,20 +1373,38 @@ export default function PitchPage() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InputRow({
+  label,
+  value,
+  onChange,
+  placeholder,
+  textarea,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  textarea?: boolean;
+}) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-muted">{label}</span>
-      {value ? (
-        <span className="flex items-center gap-1.5 text-sm">
-          <span className="h-1.5 w-1.5 rounded-full bg-green"></span>
-          {value}
-        </span>
+    <div>
+      <label className="mb-1 block text-xs font-medium text-muted">{label}</label>
+      {textarea ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={2}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+        />
       ) : (
-        <span className="flex items-center gap-1.5 text-xs text-muted">
-          <span className="h-1.5 w-1.5 rounded-full bg-border"></span>
-          Waiting...
-        </span>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-accent"
+        />
       )}
     </div>
   );

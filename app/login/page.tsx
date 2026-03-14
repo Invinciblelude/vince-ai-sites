@@ -56,7 +56,7 @@ export default function LoginPage() {
             T
           </Link>
           <h1 className="mt-4 text-2xl font-bold">
-            Sign in or create an account
+            Create account or sign in
           </h1>
           <p className="mt-1 text-sm text-muted">
             Pick your style, browse 14+ Trion-built sites, and see how an agent answers, logs, and books. Use Google to create an account.

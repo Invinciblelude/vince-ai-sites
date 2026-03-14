@@ -1,0 +1,10 @@
+Item,Category,Cost,Notes
+Land Purchase,Acquisition,258500,Purchase price
+Closing Costs,Acquisition,7755,3%
+Infrastructure - Off-Site,Construction,102166,Grading, paving, utilities
+Infrastructure - On-Site,Construction,577223,Storm drain, sewer, water
+Building Construction,Construction,1742440,12446 SF @ $140/SF
+Contingency,Construction,87122,5%
+Permits,Soft Costs,45000,Building permits
+Professional Fees,Soft Costs,85000,Architect, engineer, surveyor
+Construction Loan Interest,Financing,185000,18mo @ 8.5%

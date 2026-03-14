@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { VinceAssistant } from "@/components/vince-assistant";
+import { ProAnalysisSection } from "@/components/pro-analysis-section";
 import { TRION_SITES, SITE_CATEGORIES } from "@/lib/sites";
+import { FEASIBILITY_REPORTS } from "@/lib/feasibility-reports";
 
 const TRION_SERVICES = [
   {
@@ -23,6 +25,11 @@ const TRION_SERVICES = [
   {
     title: "I Handle Reviews & Reminders",
     desc: "I log review requests after visits. I read bookings and prepare reminder messages. I handle the follow-up.",
+    tag: null,
+  },
+  {
+    title: "I Analyze Reports & Projects",
+    desc: "I analyze feasibility reports, market data, and project plans. I surface insights, risks, and recommendations so you make better decisions.",
     tag: null,
   },
 ];
@@ -66,7 +73,7 @@ export default function Home() {
           I&apos;m your AI agent — here to help your business grow.
         </p>
         <p className="mx-auto mb-8 max-w-2xl text-base text-muted leading-relaxed">
-          I answer your customers 24/7. I log leads, book appointments, and collect reviews.
+          I answer your customers 24/7. I log leads, book appointments, collect reviews, and analyze reports & projects.
           I run as five roles — CEO, COO, CFO, Secretary, Employee. Check out my accomplishments below — {TRION_SITES.length} live sites I&apos;ve built across {SITE_CATEGORIES.length} industries.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -74,7 +81,7 @@ export default function Home() {
             href="/pitch#plans"
             className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-all hover:bg-accent-dim hover:scale-[1.02] shadow-lg shadow-accent/20"
           >
-            Talk to Trion — Get Your Site
+            Hire Agent — Talk to Trion
           </Link>
           <Link
             href="/sites"
@@ -86,7 +93,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Trion Services — with friendly images */}
+      {/* 1. Services */}
       <section id="services" className="mb-24 border-t border-border/50 pt-24">
         <div className="mb-12 text-center">
           <span className="inline-block mb-3 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
@@ -125,7 +132,43 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sites We Built — Showcase */}
+      {/* 2. Hire Agent CTA */}
+      <section id="hire-agent" className="mb-24 rounded-2xl border-2 border-accent/30 overflow-hidden relative">
+        <img
+          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          aria-hidden
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-accent/10 to-green/10" />
+        <div className="relative p-10 sm:p-12">
+        <div className="relative text-center">
+          <h2 className="mb-3 text-3xl sm:text-4xl font-bold">Hey — Want Me to Build Yours?</h2>
+          <p className="mx-auto mb-3 max-w-2xl text-muted">
+            I build AI assistants, booking, CRM, and reviews — live in 24 hours. Barber shops, salons, restaurants, contractors — any business that needs to answer customers 24/7.
+          </p>
+          <p className="mx-auto mb-8 max-w-xl text-sm text-muted">
+            Talk to me. I&apos;ll give you a live preview in 60 seconds. No payment, no commitment.
+          </p>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
+            <Link
+              href="/pitch#plans"
+              className="rounded-xl bg-accent px-10 py-4 text-lg font-semibold text-white transition-all hover:bg-accent-dim hover:scale-[1.02] shadow-lg shadow-accent/25"
+            >
+              Hire Agent — Talk to Trion
+            </Link>
+            <Link
+              href="/sites"
+              className="rounded-xl border-2 border-green/50 bg-green/5 px-10 py-4 text-lg font-semibold text-green transition-all hover:bg-green/10"
+            >
+              Check Out My {TRION_SITES.length} Live Sites
+            </Link>
+          </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Sites */}
       <section id="sites" className="mb-24 border-t border-border/50 pt-24">
         <div className="mb-12 text-center">
           <span className="inline-block mb-3 rounded-full bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent">
@@ -179,41 +222,127 @@ export default function Home() {
         </div>
       </section>
 
-      {/* The CTA — friendly, inviting */}
-      <section className="mb-24 rounded-2xl border-2 border-accent/30 overflow-hidden relative">
-        <img
-          src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200&q=80"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/20 via-accent/10 to-green/10" />
-        <div className="relative p-10 sm:p-12">
-        <div className="relative text-center">
-          <h2 className="mb-3 text-3xl sm:text-4xl font-bold">Hey — Want Me to Build Yours?</h2>
-          <p className="mx-auto mb-3 max-w-2xl text-muted">
-            I build AI assistants, booking, CRM, and reviews — live in 24 hours. Barber shops, salons, restaurants, contractors — any business that needs to answer customers 24/7.
+      {/* 4. Analysis */}
+      <section id="analysis" className="mb-24 border-t border-border/50 pt-24">
+        <div className="mb-12 text-center">
+          <span className="inline-block mb-3 rounded-full bg-violet-500/10 px-4 py-1.5 text-sm font-medium text-violet-600">
+            Analysis in Action
+          </span>
+          <h2 className="mb-2 text-3xl font-bold">Real Analysis, Real Duties & Tasks</h2>
+          <p className="mx-auto max-w-2xl text-muted">
+            See what Trion&apos;s analysis actually delivers — strategy comparison, cost breakdown, feasibility assessment, and clear recommendations. Live example below.
           </p>
-          <p className="mx-auto mb-8 max-w-xl text-sm text-muted">
-            Talk to me. I&apos;ll give you a live preview in 60 seconds. No payment, no commitment.
-          </p>
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:flex-wrap sm:justify-center">
-            <Link
-              href="/pitch#plans"
-              className="rounded-xl bg-accent px-10 py-4 text-lg font-semibold text-white transition-all hover:bg-accent-dim hover:scale-[1.02] shadow-lg shadow-accent/25"
-            >
-              Talk to Trion — Get Your Site
-            </Link>
-            <Link
-              href="/sites"
-              className="rounded-xl border-2 border-green/50 bg-green/5 px-10 py-4 text-lg font-semibold text-green transition-all hover:bg-green/10"
-            >
-              Check Out My {TRION_SITES.length} Live Sites
-            </Link>
+        </div>
+        <div className="rounded-2xl border-2 border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-transparent overflow-hidden">
+          <div className="grid gap-0 sm:grid-cols-2">
+            <div className="p-8 sm:p-10">
+              <h3 className="mb-2 text-xl font-bold">4929 Nerrads Place — Complete Strategy Analysis</h3>
+              <p className="mb-6 text-sm text-muted">
+                Sacramento subdivision • 1.17 acres • 75% de-risked. Trion analyzed two strategies with verified engineering data.
+              </p>
+              <a
+                href="https://silvercrowdcraft.com/nerrads-project.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
+              >
+                View full analysis
+                <span>→</span>
+              </a>
+            </div>
+            <div className="border-t sm:border-t-0 sm:border-l border-border bg-card/50 p-8 sm:p-10">
+              <h4 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted">What Trion Delivered</h4>
+              <ul className="space-y-3 text-sm">
+                {[
+                  { task: "Strategy comparison", detail: "Strategy A (Sell Lots) vs Strategy B (Build Homes) — side-by-side ROI, timeline, risk" },
+                  { task: "Cost breakdown", detail: "Verified infrastructure costs ($679K), land basis, construction estimates from engineering reports" },
+                  { task: "Feasibility assessment", detail: "Conservative, realistic, optimistic scenarios — profit/loss at each" },
+                  { task: "Clear recommendation", detail: "Strategy A profitable ($245K–$548K). Strategy B loses money. Hybrid option outlined." },
+                  { task: "Action plan", detail: "Month-by-month timeline, pre-sales targets, builder contacts, cost reduction paths" },
+                  { task: "De-risking status", detail: "75% complete — what's done vs remaining, value of completed milestones" },
+                ].map((item, i) => (
+                  <li key={i} className="flex gap-3">
+                    <span className="mt-1 flex h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
+                    <div>
+                      <span className="font-medium">{item.task}</span>
+                      <span className="text-muted"> — {item.detail}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
-        </div>
       </section>
+
+      {/* 5. Reports */}
+      <section id="reports" className="mb-24 border-t border-border/50 pt-24">
+        <div className="mb-12 text-center">
+          <span className="inline-block mb-3 rounded-full bg-green/10 px-4 py-1.5 text-sm font-medium text-green">
+            What Trion Can Do
+          </span>
+          <h2 className="mb-2 text-3xl font-bold">Feasibility Reports</h2>
+          <p className="mx-auto max-w-2xl text-muted">
+            Trion analyzes reports and projects — feasibility studies, market analysis, competitor research, revenue projections.{" "}
+            <a href="/#analysis" className="text-accent underline underline-offset-2 hover:no-underline">See real duties & tasks</a>{" "}
+            from the Nerrads strategy analysis. Ask Trion to analyze yours.
+          </p>
+        </div>
+        {FEASIBILITY_REPORTS.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {FEASIBILITY_REPORTS.map((report) => (
+              <a
+                key={report.url}
+                href={report.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col rounded-xl border border-border bg-card overflow-hidden transition-all hover:border-accent/40 hover:shadow-xl hover:shadow-accent/10"
+              >
+                <div className="relative h-36 shrink-0 overflow-hidden">
+                  <img
+                    src={report.preview || "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&q=80"}
+                    alt={report.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                  <div className="absolute bottom-2 left-3 right-3 flex items-center gap-2">
+                    <span className="text-xs font-medium text-white/90">{report.category}</span>
+                    <span className="rounded bg-green/80 px-1.5 py-0.5 text-[10px] font-medium text-white">Site + Analysis</span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2 p-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-foreground group-hover:text-accent transition-colors">
+                      {report.title}
+                    </div>
+                    <p className="text-xs text-muted mt-1 line-clamp-2">{report.description}</p>
+                  </div>
+                  <span className="shrink-0 text-muted group-hover:text-accent transition-colors">→</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border-2 border-dashed border-border bg-card/50 p-12 text-center">
+            <div className="mb-4 flex justify-center">
+              <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green/10 text-3xl">📊</span>
+            </div>
+            <h3 className="mb-2 font-semibold">Feasibility Reports Coming Soon</h3>
+            <p className="mx-auto max-w-md text-sm text-muted mb-6">
+              Add your feasibility reports to <code className="rounded bg-muted px-1.5 py-0.5 text-xs">lib/feasibility-reports.ts</code> to display them here. Market analysis, competitor research, revenue projections — showcase what Trion can produce.
+            </p>
+            <Link
+              href="/pitch"
+              className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-dim"
+            >
+              Get a feasibility report — Talk to Trion
+            </Link>
+          </div>
+        )}
+      </section>
+
+      {/* 6. Pro — Analysis & Workload Design with demo */}
+      <ProAnalysisSection />
 
       <footer className="border-t border-border py-8 text-center text-sm text-muted">
         <span className="font-medium text-foreground">Trion Express</span> — Your AI Business Team

@@ -1,0 +1,4 @@
+Scenario,Revenue,Avg Price Per Lot,Infrastructure,Financing,Sales Commission,Other Costs,Total Costs,Net Profit,ROI %
+Conservative,1135000,142000,679389,67939,45400,63000,889693,245307,36
+Realistic,1300000,162000,679389,67939,52000,63000,896293,403707,60
+Optimistic,1450000,181000,679389,67939,58000,63000,902293,547707,81
