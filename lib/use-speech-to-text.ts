@@ -2,15 +2,15 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SpeechRecognition =
   typeof window !== "undefined" &&
-  ((window as unknown as { SpeechRecognition?: typeof globalThis.SpeechRecognition }).SpeechRecognition ||
-   (window as unknown as { webkitSpeechRecognition?: typeof globalThis.SpeechRecognition }).webkitSpeechRecognition);
+  ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
 
 export function useSpeechToText(onResult: (text: string) => void) {
   const [isListening, setIsListening] = useState(false);
   const [supported, setSupported] = useState(false);
-  const recognitionRef = useRef<InstanceType<typeof SpeechRecognition> | null>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
 
   useEffect(() => {
     setSupported(!!SpeechRecognition);
