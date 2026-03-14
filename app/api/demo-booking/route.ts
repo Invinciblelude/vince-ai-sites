@@ -27,7 +27,11 @@ export async function POST(req: NextRequest) {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !anonKey) {
-    return NextResponse.json({ success: false, error: "Supabase not configured" }, { status: 503 });
+    return NextResponse.json({
+      success: false,
+      error: "config",
+      message: "Supabase not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel.",
+    }, { status: 503 });
   }
 
   try {
@@ -42,17 +46,29 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
+    // Normalize date: HTML date input returns YYYY-MM-DD; some pickers use MM/DD/YYYY
+    let dateStr = String(date).trim();
+    const m = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (m) dateStr = `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+    const timeStr = String(time).trim();
     const contact = phone || email || "from demo";
-    const supabase = createClient(url, serviceKey || anonKey);
 
-    // Check for existing bookings on same date — enforce 1 hour separation
-    const { data: existing } = await supabase
-      .from("demo_bookings")
-      .select("time")
-      .eq("date", String(date).trim());
+    // Prefer service role — bypasses RLS. Fallback to anon.
+    let supabase = createClient(url, serviceKey || anonKey);
 
-    const existingTimes = (existing || []).map((r) => r.time).filter(Boolean);
-    if (hasConflict(String(time).trim(), existingTimes)) {
+    // Conflict check — skip if it fails (e.g. anon can't SELECT)
+    let existingTimes: string[] = [];
+    try {
+      const { data: existing } = await supabase
+        .from("demo_bookings")
+        .select("time")
+        .eq("date", dateStr);
+      existingTimes = (existing || []).map((r: { time?: string }) => r.time).filter((t): t is string => !!t);
+    } catch {
+      // Ignore — proceed with insert
+    }
+
+    if (hasConflict(timeStr, existingTimes)) {
       return NextResponse.json({
         success: false,
         error: "slot_unavailable",
@@ -60,19 +76,39 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
-    const { error } = await supabase.from("demo_bookings").insert({
+    const row = {
       name: String(name).trim(),
       phone: contact,
       service: String(topic).trim(),
-      date: String(date).trim(),
-      time: String(time).trim(),
+      date: dateStr,
+      time: timeStr,
       notes: email ? `Email: ${email}` : "",
       status: "pending",
-    });
+    };
+
+    let { error } = await supabase.from("demo_bookings").insert(row);
+
+    // If service role failed (e.g. wrong key), retry with anon
+    if (error && serviceKey) {
+      console.warn("Demo booking: service role failed, retrying with anon:", error.message);
+      supabase = createClient(url, anonKey);
+      const retry = await supabase.from("demo_bookings").insert(row);
+      error = retry.error;
+    }
 
     if (error) {
       console.error("Demo booking API error:", error);
-      return NextResponse.json({ success: false, error: "save_failed", message: "Could not save booking. Please try again." }, { status: 500 });
+      const hint = error.message?.includes("does not exist")
+        ? "Table demo_bookings not found. Run docs/SUPABASE-DEMO-SETUP-FULL.sql in Supabase."
+        : error.message?.includes("JWT") || error.message?.includes("auth")
+          ? "Supabase key invalid. Check SUPABASE_SERVICE_ROLE_KEY and anon key in Vercel."
+          : error.message || "Unknown database error.";
+      return NextResponse.json({
+        success: false,
+        error: "save_failed",
+        message: "Could not save booking.",
+        reason: hint,
+      }, { status: 500 });
     }
 
     // Email alert to admin — set RESEND_API_KEY and ADMIN_EMAIL in Vercel

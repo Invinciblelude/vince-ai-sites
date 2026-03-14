@@ -501,7 +501,8 @@ export default function PitchPage() {
         setBookingMessage({ type: "success", text: data.message || "Booked!" });
         form.reset();
       } else {
-        setBookingMessage({ type: "error", text: data.message || "Could not book. Please try again." });
+        const msg = data.reason ? `${data.message || "Could not book."} ${data.reason}` : (data.message || "Could not book. Please try again.");
+        setBookingMessage({ type: "error", text: msg });
       }
     } catch {
       setBookingMessage({ type: "error", text: "Connection error. Please try again." });
