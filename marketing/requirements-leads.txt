@@ -1,0 +1,2 @@
+# For lead_scraper.py - uses only stdlib (urllib, json, csv)
+# No extra deps required. Python 3.10+ recommended.

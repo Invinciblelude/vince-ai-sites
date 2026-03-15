@@ -67,8 +67,8 @@ export default function RootLayout({
                   Make an appointment
                 </a>
               )}
-              <Link href="/partnership" className="hidden sm:block transition-colors hover:text-foreground">
-                Partnership
+              <Link href="/partnership#platform-integration" className="hidden sm:block transition-colors hover:text-foreground">
+                Partners
               </Link>
               <NavAuth />
             </div>
