@@ -112,10 +112,13 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // Email alert to admin — set RESEND_API_KEY and ADMIN_EMAIL in Vercel
-    const adminEmail = process.env.ADMIN_EMAIL;
+    // Email alert to admin — set RESEND_API_KEY. ADMIN_EMAIL from .env.local
+    const adminEmail = process.env.ADMIN_EMAIL || "nestinghome916@gmail.com";
     const resendKey = process.env.RESEND_API_KEY;
-    if (adminEmail && resendKey) {
+    let emailSent = false;
+    let emailError: string | null = null;
+
+    if (resendKey) {
       try {
         const res = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -126,20 +129,41 @@ export async function POST(req: NextRequest) {
           body: JSON.stringify({
             from: "Trion Express <onboarding@resend.dev>",
             to: [adminEmail],
-            subject: `New session booked: ${name} — ${date} at ${time}`,
-            html: `<p><strong>${name}</strong> booked a session.</p><p><strong>Date:</strong> ${date} at ${time}</p><p><strong>Topic:</strong> ${topic}</p><p><strong>Contact:</strong> ${contact}</p><p><a href="https://trionexpress.com/dashboard">View dashboard</a></p>`,
+            subject: `[Trion] New session booked: ${name} — ${date} at ${time}`,
+            html: `
+              <h2>New Session Booked</h2>
+              <p><strong>${name}</strong> booked a session.</p>
+              <ul>
+                <li><strong>Date:</strong> ${date} at ${time}</li>
+                <li><strong>Topic:</strong> ${topic}</li>
+                <li><strong>Contact:</strong> ${contact}</li>
+                ${email ? `<li><strong>Email:</strong> ${email}</li>` : ""}
+              </ul>
+              <p><a href="https://trionexpress.com/dashboard">View dashboard</a></p>
+            `,
           }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) console.error("Resend email failed:", res.status, data);
+        if (res.ok) {
+          emailSent = true;
+          console.log("Booking email sent to", adminEmail);
+        } else {
+          emailError = data.message || `Resend ${res.status}`;
+          console.error("Resend email failed:", res.status, data);
+        }
       } catch (e) {
+        emailError = e instanceof Error ? e.message : String(e);
         console.error("Resend email error:", e);
       }
+    } else {
+      emailError = "RESEND_API_KEY not set";
     }
 
     return NextResponse.json({
       success: true,
       message: `Booked! ${name} — ${date} at ${time} for ${topic}`,
+      emailSent,
+      emailError: emailError || undefined,
     });
   } catch (err) {
     console.error("Demo booking API error:", err);

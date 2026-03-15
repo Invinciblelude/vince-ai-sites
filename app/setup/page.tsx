@@ -29,6 +29,8 @@ CREATE POLICY "Allow anon select demo_bookings" ON demo_bookings FOR SELECT USIN
 export default function SetupPage() {
   const [status, setStatus] = useState<{ ok: boolean; message?: string; hint?: string; projectId?: string } | null>(null);
   const [copied, setCopied] = useState(false);
+  const [setupRunning, setSetupRunning] = useState(false);
+  const [setupResult, setSetupResult] = useState<{ ok: boolean; message?: string } | null>(null);
 
   useEffect(() => {
     fetch("/api/check-supabase")
@@ -48,6 +50,28 @@ export default function SetupPage() {
     await navigator.clipboard.writeText(DEMO_BOOKINGS_SQL);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function runSetup() {
+    setSetupRunning(true);
+    setSetupResult(null);
+    try {
+      const res = await fetch("/api/setup-demo-bookings", { method: "POST" });
+      const data = await res.json();
+      setSetupResult({ ok: data.success, message: data.message || data.error || (data.hint ? `${data.error}. ${data.hint}` : "Unknown error") });
+      if (data.success) {
+        setTimeout(() => {
+          fetch("/api/check-supabase").then((r) => r.json()).then((d) => {
+            const projectId = d.projectId ?? d.projectUrl;
+            setStatus(d.ok ? { ok: true, message: d.message, projectId } : { ok: false, message: d.error, hint: d.hint, projectId });
+          });
+        }, 500);
+      }
+    } catch {
+      setSetupResult({ ok: false, message: "Request failed" });
+    } finally {
+      setSetupRunning(false);
+    }
   }
 
   return (
@@ -78,10 +102,28 @@ export default function SetupPage() {
           </div>
         )}
 
-        <h2 className="mb-2 font-semibold">Steps</h2>
+        <h2 className="mb-2 font-semibold">Option A: One-click setup (easiest)</h2>
+        <p className="mb-3 text-sm text-muted">
+          Add <code className="rounded bg-muted px-1">SUPABASE_DATABASE_URL</code> to .env.local. Get it from Supabase → Settings → Database → Connection string (URI). Use &quot;Direct connection&quot; or &quot;Transaction pooler&quot;.
+        </p>
+        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            onClick={runSetup}
+            disabled={setupRunning}
+            className="rounded-lg bg-green px-4 py-2 text-sm font-semibold text-white hover:bg-green/90 disabled:opacity-50"
+          >
+            {setupRunning ? "Creating table…" : "Create demo_bookings table now"}
+          </button>
+          {setupResult && (
+            <span className={`text-sm ${setupResult.ok ? "text-green" : "text-red-600"}`}>
+              {setupResult.ok ? "✓" : "⚠"} {setupResult.message}
+            </span>
+          )}
+        </div>
+
+        <h2 className="mb-2 font-semibold">Option B: Manual SQL</h2>
         <ol className="mb-6 list-decimal list-inside space-y-2 text-sm text-muted">
-          <li>Check your <code className="rounded bg-muted px-1">.env.local</code> — note the project ID in <code className="rounded bg-muted px-1">NEXT_PUBLIC_SUPABASE_URL</code> (e.g. <code className="rounded bg-muted px-1">https://xxxxx.supabase.co</code>)</li>
-          <li>Open Supabase Dashboard and select that same project</li>
+          <li>Open Supabase Dashboard and select your project</li>
           <li>Go to SQL Editor → New query</li>
           <li>Copy the SQL below and paste it → Run</li>
           <li>Add <code className="rounded bg-muted px-1">SUPABASE_SERVICE_ROLE_KEY</code> to .env.local (from Supabase → Settings → API)</li>

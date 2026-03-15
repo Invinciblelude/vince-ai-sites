@@ -509,7 +509,10 @@ export default function PitchPage() {
       const data = await res.json().catch(() => ({}));
       if (data.success) {
         setDemoBookings((prev) => [...prev, { name, date, time, topic }]);
-        setBookingMessage({ type: "success", text: data.message || "Booked!" });
+        let msg = data.message || "Booked!";
+        if (data.emailSent) msg += " Email sent to you.";
+        else if (data.emailError) msg += ` (Email failed: ${data.emailError})`;
+        setBookingMessage({ type: "success", text: msg });
         form.reset();
       } else {
         const msg = data.reason ? `${data.message || "Could not book."} ${data.reason}` : (data.message || "Could not book. Please try again.");
