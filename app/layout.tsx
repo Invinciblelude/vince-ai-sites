@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
 import { BOOK_CALL_URL } from "@/lib/config";
 import { NavAuth } from "@/components/nav-auth";
+import { NavMobile } from "@/components/nav-mobile";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,6 +21,11 @@ export const metadata: Metadata = {
   title: "Trion Express | Simple Websites + 24/7 AI for Local Businesses",
   description:
     "We build websites with AI assistants for contractors, restaurants, barbershops. Launch $500–$1,500 setup or Trion Ultra $750–$2,000 + $49–$199/mo. Recurring revenue model. Done in 7–14 days. Book a free call.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -39,6 +45,7 @@ export default function RootLayout({
               <span>Trion Express</span>
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted">
+              <NavMobile />
               <a href="/home#launch" className="hidden sm:block transition-colors hover:text-foreground">
                 Launch
               </a>
