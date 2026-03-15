@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { INDUSTRIES, matchIndustry, buildIndustryKnowledgeBlock, TRION_ROLES, type IndustryProfile } from "@/lib/industries";
+import { TRION_SKILLS_DISCLOSURE } from "@/lib/trion-skills";
 import { useSpeechToText } from "@/lib/use-speech-to-text";
 
 interface BusinessInfo {
@@ -72,7 +74,7 @@ function getIndustryImages(bizType: string) {
 
 const INDUSTRY_KNOWLEDGE = buildIndustryKnowledgeBlock();
 
-const SALES_AGENT_PROMPT = `You are Trion — the AI business consultant from Trion Express. You don't just build websites. You build an entire AI team for every business: a CEO brain, a COO, a CFO, a Secretary, and an Employee — all working 24/7.
+const SALES_AGENT_PROMPT = `You are Trion — the AI business consultant from Trion Express. WE ARE HERE TO SUPPORT YOU. Be transparent: when asked "what can you do?" or "what skills?" — share the full list. When someone shares their business type, proactively tell them which skills apply to their business. You don't just build websites. You build an entire AI team for every business: a CEO brain, a COO, a CFO, a Secretary, and an Employee — all working 24/7.
 
 You are an expert in EVERY industry: ${Object.values(INDUSTRIES).map(p => p.category).filter((v, i, a) => a.indexOf(v) === i).join(", ")}. You cover ${Object.keys(INDUSTRIES).length}+ business types. You don't collect info — you DIAGNOSE problems, PRESCRIBE the right AI team, and BUILD it.
 
@@ -164,7 +166,7 @@ CFO: Track profitability per client
 Secretary: Qualify leads by budget/timeline, schedule discovery calls
 Employee: Generate reports, create proposals, post content
 
-Packages: Starter $199+$50/mo | Pro $349+$75/mo (BEST) | Premium $599+$150/mo. Live in 24hrs.
+Packages: Launch $500–$1,500 setup (optional $49–$99/mo) | Trion Ultra $750–$2,000 setup + $49–$199/mo (BEST). We emphasize recurring revenue. Live in 24hrs.
 
 YOUR INDUSTRY DATABASE (${Object.keys(INDUSTRIES).length}+ industries):
 ${INDUSTRY_KNOWLEDGE}
@@ -206,7 +208,7 @@ Format:
 📱 Secretary: [How it handles communication]
 🔨 Employee: [Tasks it executes daily]
 
-I'd put you on the **Pro package** — $349 setup + $75/mo. Includes AI chat, auto-booking, CRM, review collection, and all 5 AI roles active.
+I'd put you on **Trion Ultra** — $750–$2,000 setup + $49–$199/mo. Includes AI chat, auto-booking, CRM, review collection, and all 5 AI roles active. Recurring revenue model.
 
 **Your site preview is ready below** — build it to see. Then share your location, phone, and email and we'll customize it."
 
@@ -226,6 +228,9 @@ DATA EXTRACTION:
 - type: REQUIRED — barber, nail, restaurant, contractor, etc. (from industry database)
 - services, hours, painPoints, features: use industry defaults from your database when client hasn't specified
 - Include in EVERY response once you have data.
+
+UNIVERSAL PRO MODEL — When they paste a job posting, role description, or business info:
+Switch to STRATEGIST mode. Extract core needs (5–10 bullets by theme), hidden goals/pain points, design TRION as a service (strategy, systems, coordination, reporting), define 2–3 packages (Fractional retainer, Done-with-you, One-time setup), write outreach script, note industry adaptations. Output structured, copy-paste ready. Speak as TRION EXPRESS (we/us).
 
 RULES:
 - Think like a CEO consultant, not a form collector
@@ -263,7 +268,7 @@ export default function PitchPage() {
   const [biz, setBiz] = useState<BusinessInfo>(EMPTY_BIZ);
   const [showPreview, setShowPreview] = useState(false);
   const [readyToBuild, setReadyToBuild] = useState(false);
-  const [selectedPackage, setSelectedPackage] = useState("pro");
+  const [selectedPackage, setSelectedPackage] = useState("ultra");
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [agentSlug, setAgentSlug] = useState<string | null>(null);
@@ -273,6 +278,7 @@ export default function PitchPage() {
   const [demoBookings, setDemoBookings] = useState<{ name: string; date: string; time: string; topic: string }[]>([]);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingMessage, setBookingMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [activeSkill, setActiveSkill] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const lastFormSaveRef = useRef<string>("");
@@ -306,8 +312,13 @@ export default function PitchPage() {
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.location.hash === "#plans") {
-      setActiveTab("plans");
+    if (typeof window !== "undefined") {
+      if (window.location.hash === "#plans") {
+        setActiveTab("plans");
+      } else {
+        // Land at top of hero when navigating to Trion Ultra, not in the middle of a section
+        window.scrollTo(0, 0);
+      }
     }
   }, []);
 
@@ -525,13 +536,16 @@ export default function PitchPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/demo-chat", {
+      const res = await fetch("/api/trion-agent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ systemPrompt, messages: newMessages }),
       });
 
       if (!res.ok) throw new Error("Failed");
+      const skill = res.headers.get("X-Trion-Skill");
+      const skillName = res.headers.get("X-Trion-Skill-Name");
+      if (skill) setActiveSkill(skillName ?? skill);
       const reader = res.body?.getReader();
       if (!reader) throw new Error("No stream");
 
@@ -592,23 +606,30 @@ export default function PitchPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-accent/10 via-transparent to-transparent" />
 
         <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-8">
-          {/* Top intro */}
-          <div className="mb-8 text-center">
-            <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
-              <span className="inline-flex items-center gap-2 rounded-full bg-green/10 px-4 py-1.5 text-sm font-medium text-green">
-                <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green opacity-75"></span><span className="relative inline-flex h-2 w-2 rounded-full bg-green"></span></span>
-                Trion is Live
-              </span>
-              <Link href="/sites" className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-1.5 text-sm text-muted transition-colors hover:border-accent hover:text-accent">
-                See 15+ sites Trion built →
-              </Link>
+          {/* Top left — Logo + Trion Express (proportional) */}
+          <div className="mb-8 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent/10 via-accent/5 to-accent/20 ring-1 ring-accent/20 overflow-hidden sm:h-10 sm:w-10">
+                <Image src="/trion-express-logo-orange.png" alt="" width={40} height={40} className="object-contain" priority />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-foreground sm:text-xl">Trion Express</span>
             </div>
+            <span className="inline-flex items-center gap-2 rounded-full bg-green/10 px-3 py-1 text-xs font-medium text-green sm:text-sm">
+              <span className="relative flex h-1.5 w-1.5 sm:h-2 sm:w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-green"></span></span>
+              Trion is Live
+            </span>
+          </div>
+
+          {/* Hero content */}
+          <div className="mb-8 text-center">
             <h1 className="mb-3 text-4xl font-bold sm:text-5xl">
-              Meet Trion — Your AI Business Consultant
+              AI Business Team — Answer, Book & Grow 24/7
             </h1>
+            <p className="mb-2 text-lg font-semibold text-accent">
+              I&apos;m Trion. I answer customers, make appointments, capture leads, and collect reviews — so you don&apos;t miss a sale.
+            </p>
             <p className="mx-auto max-w-2xl text-muted">
-              Tell Trion what you do. It already knows your industry — services, prices, hours, and problems.
-              It&apos;ll diagnose your business, prescribe the fix, and build your site in 60 seconds.
+              Barbers, salons, restaurants, contractors — any business that needs to answer customers 24/7. I run as five roles: CEO, COO, CFO, Secretary, Employee. 16 live sites built across 8 industries.
             </p>
           </div>
 
@@ -637,11 +658,10 @@ export default function PitchPage() {
             <div id="plans" className="rounded-2xl border border-border bg-card p-8 sm:p-10">
               <h2 className="mb-2 text-center text-2xl font-bold">Plans & Pricing</h2>
               <p className="mb-8 text-center text-sm text-muted">Pick a plan. Switch to &quot;Talk to Trion&quot; to build your site. Live in 24 hours.</p>
-              <div className="grid gap-6 sm:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2">
                 {([
-                  { key: "starter", name: "Starter", setup: "$199", mo: "$50/mo", features: ["Website + AI chat", "Mobile responsive", "Basic booking"], popular: false },
-                  { key: "pro", name: "Pro", setup: "$349", mo: "$75/mo", features: ["Everything in Starter", "CRM + Reviews + Reminders", "Full AI team"], popular: true },
-                  { key: "premium", name: "Premium", setup: "$599", mo: "$150/mo", features: ["Everything in Pro", "Social content + Reels", "Priority support"], popular: false },
+                  { key: "launch", name: "Launch Package", setup: "$500–$1,500", mo: "", sub: "Optional: $49–$99/mo hosting + updates + AI tuning", features: ["1–5 page website (Home, About, Services, Gallery, Contact)", "Basic SEO + mobile-friendly", "AI assistant on site to answer FAQs and capture leads", "Contact forms and notifications", "1–2 rounds of revisions"], popular: false },
+                  { key: "ultra", name: "Trion Ultra", setup: "$750–$2,000", mo: "$49–$199/mo", sub: "Recurring revenue model. Best for: I want AI in my whole business", features: ["Everything in Launch Package", "Multi-channel AI (site chat + SMS/email)", "Workflow automations (follow-ups, reminders, CRM)", "Multiple agent roles (reception, FAQ, intake)", "Monthly optimization and reporting"], popular: true },
                 ] as const).map((pkg) => (
                   <div
                     key={pkg.key}
@@ -650,10 +670,11 @@ export default function PitchPage() {
                     }`}
                   >
                     {pkg.popular && (
-                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-green px-3 py-0.5 text-[10px] font-bold text-white">BEST VALUE</div>
+                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-accent px-3 py-0.5 text-[10px] font-bold text-white">AI BUSINESS TEAM</div>
                     )}
                     <div className="font-bold text-lg">{pkg.name}</div>
-                    <div className="text-accent font-semibold mt-2 text-base">{pkg.setup} + {pkg.mo}</div>
+                    <div className="text-accent font-semibold mt-2 text-base">{pkg.setup}{pkg.mo ? ` + ${pkg.mo}` : ""}</div>
+                    {pkg.sub && <div className="text-xs text-muted mt-0.5">{pkg.sub}</div>}
                     <ul className="mt-4 flex-1 space-y-2 text-sm">
                       {pkg.features.map((f, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-muted">
@@ -664,7 +685,7 @@ export default function PitchPage() {
                   </div>
                 ))}
               </div>
-              <p className="mt-6 text-center text-sm text-muted">No contracts. Cancel anytime.</p>
+              <p className="mt-6 text-center text-sm text-muted">No contracts. Cancel anytime. We emphasize recurring revenue in our model.</p>
               <div className="mt-8 text-center">
                 <button
                   onClick={() => setActiveTab("ai")}
@@ -676,36 +697,35 @@ export default function PitchPage() {
             </div>
           ) : (
           <>
-          {/* AI Team — horizontal bar on top, evenly spaced */}
-          <div className="mb-6 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 sm:flex-nowrap sm:justify-between sm:gap-6">
-            <span className="text-sm font-bold uppercase tracking-wider text-muted shrink-0">Your AI Team</span>
-            <div className="flex w-full flex-1 flex-wrap items-center justify-between gap-x-4 gap-y-3 sm:flex-nowrap sm:justify-evenly">
-              {Object.entries(TRION_ROLES).map(([key, role]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="text-lg sm:text-xl shrink-0">{role.icon}</span>
-                  <div className="min-w-0">
-                    <div className="text-xs font-medium sm:text-sm">{role.title.split(" — ")[0]}</div>
-                    <div className="text-[10px] text-muted sm:text-[11px]">{role.title.split(" — ")[1]}</div>
-                  </div>
+          {/* AI Team — compact, proportional */}
+          <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 rounded-xl border border-border bg-card px-4 py-3">
+            {Object.entries(TRION_ROLES).map(([key, role]) => (
+              <div key={key} className="flex items-center gap-2 min-w-0">
+                <span className="text-sm shrink-0">{role.icon}</span>
+                <div className="min-w-0 truncate">
+                  <div className="text-[10px] sm:text-[11px] font-medium truncate">{role.title.split(" — ")[0]}</div>
+                  <div className="text-[9px] text-muted truncate hidden sm:block">{role.title.split(" — ")[1]}</div>
                 </div>
-              ))}
-            </div>
-            <div className="shrink-0 rounded-lg bg-accent/5 border border-accent/10 px-3 py-1.5">
-              <span className="text-xs text-muted">24/7</span>
+              </div>
+            ))}
+            <div className="col-span-2 sm:col-span-3 lg:col-span-1 flex items-center justify-end lg:justify-center">
+              <span className="rounded-lg bg-accent/5 border border-accent/10 px-2 py-0.5 text-[10px] text-muted">24/7</span>
             </div>
           </div>
 
-          {/* Main 2-col layout: Chat + Tell Me About You — 50/50 split */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            {/* Chat */}
-            <div className="min-w-0">
-              <div className="flex h-[520px] min-h-[400px] max-h-[70vh] flex-col rounded-2xl border border-border bg-card shadow-lg">
+          {/* Main 2-col layout: Left (Chat + Support) | Right (Tell Me About You) */}
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-8 lg:items-stretch">
+            {/* Left — Chat + We're Here To Support You */}
+            <div className="min-w-0 flex flex-col gap-4">
+              <div className="flex min-h-[300px] flex-1 flex-col rounded-2xl border border-border bg-card shadow-lg">
                 {/* Chat header */}
                 <div className="flex items-center gap-3 rounded-t-2xl bg-accent px-5 py-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20 text-sm font-bold text-white">T</div>
                   <div>
                     <div className="font-semibold text-white">Trion</div>
-                    <div className="text-xs text-white/70">AI Business Consultant — live demo</div>
+                    <div className="text-xs text-white/70">
+                      {activeSkill ? `${activeSkill} mode` : "AI Business Consultant — live demo"}
+                    </div>
                   </div>
                   <div className="ml-auto flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-white/80">
                     <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green"></span></span>
@@ -720,7 +740,7 @@ export default function PitchPage() {
                     <div className="space-y-4">
                       <div className="max-w-[88%]">
                         <div className="rounded-2xl rounded-tl-sm bg-background px-4 py-3 text-sm leading-relaxed">
-                          Hey! I&apos;m Trion — your AI business consultant. I&apos;m an expert in your industry. I already know your services, pricing, common headaches, and exactly how to fix them. Tell me what you do and your name, and I&apos;ll diagnose your business, build your solution, and have your site ready in 60 seconds.
+                          Hey! I&apos;m Trion — your AI business consultant. <strong>We&apos;re here to support you.</strong> I can build your site, answer customers 24/7, make appointments, capture leads, and more. Tell me your business type and name, and I&apos;ll show you exactly which skills apply to you — and have your site ready in 60 seconds.
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2 pt-1">
@@ -736,7 +756,9 @@ export default function PitchPage() {
                           { label: "Law / Accounting", msg: "I run a law firm, my name is " },
                           { label: "Healthcare", msg: "I run a dental office, my name is " },
                           { label: "Auto repair", msg: "I own an auto shop, my name is " },
+                          { label: "Analyze job/role", msg: "Analyze this and design a TRION service offer:\n\n" },
                           { label: "Other", msg: "I run a business called " },
+                          { label: "What can you do?", msg: "What can you do? What skills do you have?" },
                         ].map((q) => (
                           <button
                             key={q.label}
@@ -835,15 +857,36 @@ export default function PitchPage() {
                   </div>
                 </form>
               </div>
+
+              {/* We're Here To Support You — below chat, left column */}
+              <div className="flex min-h-[240px] flex-1 flex-col rounded-2xl border border-accent/20 bg-accent/5 p-6 shadow-sm">
+                <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-accent">
+                  We&apos;re Here To Support You
+                </h3>
+                <p className="mb-3 text-xs text-muted">
+                  Skills we can apply to your business or services:
+                </p>
+                <div className="min-h-0 flex-1 overflow-y-auto space-y-2">
+                  {TRION_SKILLS_DISCLOSURE.map((s, i) => (
+                    <div key={i} className="rounded-lg border border-border/50 bg-card/50 px-3 py-2 text-xs">
+                      <span className="font-semibold text-foreground">{s.name}</span>
+                      <span className="text-muted"> — {s.desc}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-[10px] text-muted shrink-0">
+                  Ask Trion &quot;what can you do?&quot; for the full list.
+                </p>
+              </div>
             </div>
 
-            {/* Sidebar — Tell Me About You (editable by client) */}
-            <div className="min-w-0">
-              <div className="flex h-[520px] min-h-[400px] max-h-[70vh] flex-col rounded-2xl border border-border bg-card p-6 shadow-lg">
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-muted">
+            {/* Right — Tell Me About You */}
+            <div className="min-w-0 flex flex-col">
+              <div className="flex min-h-[300px] flex-1 flex-col rounded-2xl border border-border bg-card p-6 shadow-lg">
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-accent">
                   Tell Me About You
                 </h3>
-                <p className="mb-4 text-xs text-muted">
+                <p className="mb-3 text-xs text-muted">
                   Fill in below or chat with Trion — both update your preview.
                 </p>
                 <div className="min-h-0 flex-1 space-y-3 overflow-y-auto text-sm">
@@ -857,7 +900,7 @@ export default function PitchPage() {
                   <InputRow label="Email" value={biz.email} onChange={(v) => setBiz((p) => ({ ...p, email: v }))} placeholder="you@business.com" />
                   <InputRow label="Goals" value={biz.goals} onChange={(v) => setBiz((p) => ({ ...p, goals: v }))} placeholder="What do you want to achieve?" textarea />
                   <InputRow label="Pain Points" value={biz.painPoints} onChange={(v) => setBiz((p) => ({ ...p, painPoints: v }))} placeholder="What's costing you time or money?" textarea />
-                  <InputRow label="AI Features" value={biz.features} onChange={(v) => setBiz((p) => ({ ...p, features: v }))} placeholder="booking, reviews, reminders..." textarea />
+                  <InputRow label="AI Features" value={biz.features} onChange={(v) => setBiz((p) => ({ ...p, features: v }))} placeholder="appointments, reviews, reminders..." textarea />
                 </div>
                 <button
                   onClick={handleBuildSite}
@@ -879,15 +922,15 @@ export default function PitchPage() {
           <div className="mt-8 rounded-2xl border-2 border-accent/20 bg-accent/5 p-6 sm:p-8">
             <div className="mb-6 text-center">
               <h3 className="text-xl font-bold">Skills in Action</h3>
-              <p className="mt-1 text-sm text-muted">Book a session and log discussion topics — see the agent work in real time.</p>
+              <p className="mt-1 text-sm text-muted">Make an appointment and log discussion topics — see the agent work in real time.</p>
             </div>
             <div className="grid gap-6 lg:grid-cols-2">
-              {/* Book a session */}
+              {/* Make an appointment */}
               <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <div className="mb-4 flex items-center gap-3">
                   <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-green/10 text-2xl">📅</span>
                   <div>
-                    <div className="font-semibold text-base">Book a session</div>
+                    <div className="font-semibold text-base">Make an appointment</div>
                     <div className="text-sm text-muted">Add to calendar instantly</div>
                   </div>
                 </div>
@@ -899,14 +942,14 @@ export default function PitchPage() {
                   </div>
                   <input name="booking-topic" placeholder="Topic / interest" className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm" required />
                   <button type="submit" disabled={bookingLoading} className="w-full rounded-xl bg-green py-3.5 text-sm font-semibold text-white transition-colors hover:bg-green/90 disabled:opacity-50">
-                    {bookingLoading ? "Checking availability…" : "Book session now"}
+                    {bookingLoading ? "Checking availability…" : "Schedule appointment"}
                   </button>
                   {bookingMessage && (
-                    <div className={`rounded-lg px-4 py-3 text-sm ${bookingMessage.type === "success" ? "bg-green/10 text-green-800 dark:text-green-200" : "bg-red-500/10 text-red-700 dark:text-red-300"}`}>
+                    <div className={`rounded-lg px-4 py-3 text-sm ${bookingMessage.type === "success" ? "bg-green/10 text-green" : "bg-red-500/10 text-red-600"}`}>
                       {bookingMessage.type === "success" ? "✓" : "⚠"} {bookingMessage.text}
                       {bookingMessage.type === "error" && (
-                        <a href="/api/check-supabase" target="_blank" rel="noopener noreferrer" className="block mt-2 text-xs underline">
-                          Check Supabase setup →
+                        <a href="/setup" className="block mt-2 text-xs underline">
+                          Fix Supabase setup →
                         </a>
                       )}
                     </div>
@@ -1008,8 +1051,8 @@ export default function PitchPage() {
                   </div>
                 </div>
               )}
-              <Link href="/" className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-colors hover:bg-accent-dim">
-                Back to Home
+              <Link href="/pitch" className="rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-colors hover:bg-accent-dim">
+                Back to Meet Trion
               </Link>
             </div>
           ) : (
@@ -1107,8 +1150,8 @@ export default function PitchPage() {
                             />
                           </div>
                           <div className="rounded-2xl border border-border bg-card p-6">
-                            <h3 className="mb-1 text-2xl font-bold">Book an Appointment</h3>
-                            <p className="mb-5 text-sm text-muted">We&apos;ll confirm your booking within minutes.</p>
+                            <h3 className="mb-1 text-2xl font-bold">Make an Appointment</h3>
+                            <p className="mb-5 text-sm text-muted">We&apos;ll confirm within minutes.</p>
                             <div className="space-y-3">
                               <input placeholder="Your name" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
                               <input placeholder="Phone or email" className="w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm outline-none focus:border-accent" />
@@ -1154,7 +1197,7 @@ export default function PitchPage() {
                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                           </div>
                           <h3 className="mb-1 font-bold">AI Assistant</h3>
-                          <p className="text-sm text-muted">Chat with us 24/7 right here on the site. Book appointments, ask questions, get instant answers.</p>
+                          <p className="text-sm text-muted">Chat with us 24/7 right here on the site. Make appointments, ask questions, get instant answers.</p>
                         </div>
                       </section>
 
@@ -1202,10 +1245,10 @@ export default function PitchPage() {
                           </div>
                           <div className="space-y-2 mb-4">
                             <div className="rounded-lg bg-background px-3 py-2 text-sm">
-                              Hey! Welcome to {previewBiz.businessName}. I can help you book an appointment, answer questions about our services, or anything else. What would you like to do?
+                              Hey! Welcome to {previewBiz.businessName}. I can help you make an appointment, answer questions about our services, or anything else. What would you like to do?
                             </div>
                             <div className="flex flex-wrap gap-1.5">
-                              {["Book appointment", "See services", "Hours & location"].map((q) => (
+                              {["Make appointment", "See services", "Hours & location"].map((q) => (
                                 <span key={q} className="rounded-full border px-2.5 py-1 text-[11px]" style={{ borderColor: `${imgs.accent}40`, color: imgs.accent }}>
                                   {q}
                                 </span>
@@ -1228,18 +1271,17 @@ export default function PitchPage() {
               <section className="rounded-2xl border-2 border-accent/30 bg-gradient-to-br from-accent/5 to-green/5 p-8 sm:p-10 text-center">
                 <h3 className="mb-2 text-3xl font-bold">Like What You See?</h3>
                 <p className="mx-auto mb-2 max-w-lg text-muted">
-                  That took 10 seconds. The full version has a working AI assistant, automated booking, CRM, and review collection — all live within 24 hours.
+                  That took 10 seconds. The full version has a working AI assistant, appointments, CRM, and review collection — all live within 24 hours.
                 </p>
                 <p className="mx-auto mb-6 max-w-lg text-sm text-muted">
                   Pick a package and we&apos;ll handle everything.
                 </p>
 
                 {/* Package selector */}
-                <div className="mb-6 grid gap-3 sm:grid-cols-3 text-sm">
+                <div className="mb-6 grid gap-3 sm:grid-cols-2 text-sm">
                   {([
-                    { key: "starter", name: "Starter", setup: "$199", mo: "$50/mo", features: ["Website + AI chat", "Mobile responsive", "Basic booking"], popular: false },
-                    { key: "pro", name: "Pro", setup: "$349", mo: "$75/mo", features: ["Everything in Starter", "AI chat", "CRM + Reviews + Reminders"], popular: true },
-                    { key: "premium", name: "Premium", setup: "$599", mo: "$150/mo", features: ["Everything in Pro", "Social content + Reels", "Priority support"], popular: false },
+                    { key: "launch", name: "Launch", setup: "$500–$1,500", mo: "optional $49–$99/mo", features: ["Website + AI chat", "Mobile responsive", "Appointments"], popular: false },
+                    { key: "ultra", name: "Trion Ultra", setup: "$750–$2,000", mo: "$49–$199/mo", features: ["Everything in Launch", "CRM + Reviews + Reminders", "Full AI team"], popular: true },
                   ] as const).map((pkg) => (
                     <button
                       key={pkg.key}
@@ -1296,7 +1338,7 @@ export default function PitchPage() {
                   { step: "1", title: "Say your business type", desc: "Barber, nail tech, salon, trainer — I already know what you offer." },
                   { step: "2", title: "I pre-fill everything", desc: "Services, prices, hours — all suggested. You just confirm or tweak." },
                   { step: "3", title: "Your site builds instantly", desc: "Click one button. Full website with AI assistant generated in seconds." },
-                  { step: "4", title: "Trion takes it live", desc: "Booking, CRM, reviews — all connected within 24 hours." },
+                  { step: "4", title: "Trion takes it live", desc: "Appointments, CRM, reviews — all connected within 24 hours." },
                 ].map((item, i) => (
                   <div key={i} className="text-center">
                     <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-lg font-bold text-white">{item.step}</div>
@@ -1312,10 +1354,10 @@ export default function PitchPage() {
           <section className="border-t border-border bg-card/30 px-4 py-20">
             <div className="mx-auto max-w-4xl">
               <h2 className="mb-4 text-center text-2xl font-bold">We Know Your Business</h2>
-              <p className="mb-12 text-center text-muted">Trion handles answer, book, log, and review — across every industry. Here&apos;s what that looks like.</p>
+              <p className="mb-12 text-center text-muted">Trion is a universal business strategist & offer designer — paste any job/role/business and get packages + outreach. Plus 24/7 answer, appointments, log, review when your site is live.</p>
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {[
-                  { biz: "Barber shop", quote: "No more missed calls. Trion books while I cut. My calendar fills itself.", stars: 5 },
+                  { biz: "Barber shop", quote: "No more missed calls. Trion schedules while I cut. My calendar fills itself.", stars: 5 },
                   { biz: "Nail salon", quote: "Answers every DM about prices and hours. I just show up and do nails.", stars: 5 },
                   { biz: "Restaurant", quote: "Takes reservations 24/7. Reminds customers. Sends review requests. I run the kitchen.", stars: 5 },
                   { biz: "Contractor", quote: "Captures leads with photos. Schedules estimates. Follows up on quotes. I close more jobs.", stars: 5 },
@@ -1342,7 +1384,7 @@ export default function PitchPage() {
                 <h2 className="mb-2 text-2xl font-bold">About Trion Express</h2>
                 <p className="mb-3 text-muted">
                   Trion Express is an AI business consultant that diagnoses what&apos;s holding your business back
-                  and builds the fix — website, AI assistant, booking, CRM, reviews — all automated.
+                  and builds the fix — website, AI assistant, appointments, CRM, reviews — all automated.
                 </p>
                 <p className="text-sm text-muted">
                   Not a big tech company. One team that figured out how to make AI
@@ -1356,10 +1398,10 @@ export default function PitchPage() {
           <section className="border-t border-border bg-muted/20 px-4 py-16">
             <div className="mx-auto max-w-4xl">
               <h2 className="mb-2 text-center text-2xl font-bold">What Gets Logged</h2>
-              <p className="mb-8 text-center text-sm text-muted">Every booking, lead, and review request goes into your workspace. Here&apos;s the data format.</p>
+              <p className="mb-8 text-center text-sm text-muted">Every appointment, lead, and review request goes into your workspace. Here&apos;s the data format.</p>
               <div className="grid gap-6 sm:grid-cols-2">
                 <div className="overflow-hidden rounded-xl border border-border bg-card">
-                  <div className="border-b border-border bg-muted/30 px-4 py-2 text-xs font-mono font-medium text-muted">bookings.jsonl</div>
+                  <div className="border-b border-border bg-muted/30 px-4 py-2 text-xs font-mono font-medium text-muted">appointments.jsonl</div>
                   <pre className="overflow-x-auto p-4 text-[11px] font-mono leading-relaxed text-muted">
 {`{"name":"Maria","phone":"555-123-4567","service":"Haircut","date":"2025-03-15","time":"2:00 PM","status":"pending","created":"2025-03-11T..."}
 {"name":"James","phone":"555-987-6543","service":"Beard","date":"2025-03-16","time":"10:30 AM","status":"pending","created":"2025-03-11T..."}`}
@@ -1394,11 +1436,57 @@ export default function PitchPage() {
         </>
       )}
 
+      {/* Trion Express intro + Services — below Meet Trion */}
+      <section className="border-t border-border bg-muted/20 px-4 py-16">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-green/10 px-4 py-1.5 text-sm font-medium text-green">
+              <span className="relative flex h-2 w-2"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green opacity-75"></span><span className="relative inline-flex h-2 w-2 rounded-full bg-green"></span></span>
+              Trion is Live
+            </span>
+          </div>
+          <h2 className="mb-2 text-center text-2xl font-bold">Trion Express</h2>
+          <p className="mb-8 text-center text-muted">
+            AI Business Team — Answer, Book & Grow 24/7. I&apos;m Trion. I answer customers, make appointments, capture leads, and collect reviews — so you don&apos;t miss a sale. Barbers, salons, restaurants, contractors — any business that needs to answer customers 24/7. I run as five roles: CEO, COO, CFO, Secretary, Employee. 16 live sites built across 8 industries.
+          </p>
+          <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: "🔍", title: "Universal Role Analysis", desc: "Paste any job/role/business. We extract core needs, hidden goals, pain points." },
+              { icon: "📐", title: "TRION Service Model", desc: "Design outcomes as a service. Strategy, systems, coordination, reporting." },
+              { icon: "📦", title: "Packages & Outreach", desc: "Fractional retainer, done-with-you, one-time setup. Pitch scripts ready." },
+              { icon: "🌐", title: "Industry Agnostic", desc: "Any vertical. Tools, regulations, KPIs. One universal flow." },
+              { icon: "📱", title: "24/7 Execution", desc: "Answer, appointments, log, review when your site is live." },
+            ].map((s) => (
+              <div key={s.title} className="rounded-xl border border-border bg-card p-4">
+                <div className="mb-2 text-2xl">{s.icon}</div>
+                <div className="font-semibold">{s.title}</div>
+                <div className="text-sm text-muted">{s.desc}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/home#services" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Services</Link>
+            <Link href="/home#sites" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Sites</Link>
+            <Link href="/home#analysis" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Analysis</Link>
+            <Link href="/home#reports" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Reports</Link>
+            <Link href="/pro-demo" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Pro</Link>
+            <Link href="/partnership" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Partnership</Link>
+            <Link href="/home" className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:border-accent hover:text-accent">Full Homepage</Link>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-border px-4 py-8 text-center text-xs text-muted">
-        <p>Trion Express &middot; Sacramento, CA</p>
+        <p className="flex flex-wrap items-center justify-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-green/10 px-2.5 py-0.5 text-[10px] font-medium text-green">
+            <span className="relative flex h-1.5 w-1.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green"></span></span>
+            Trion is Live
+          </span>
+          <span>Trion Express &middot; Sacramento, CA</span>
+        </p>
         <div className="mt-3 flex justify-center gap-4">
-          <Link href="/" className="hover:text-foreground">Home</Link>
+          <Link href="/pitch" className="hover:text-foreground">Meet Trion</Link>
           <Link href="/try" className="hover:text-foreground">Build Manually</Link>
         </div>
       </footer>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import Image from "next/image";
+import { BOOK_CALL_URL } from "@/lib/config";
 import { NavAuth } from "@/components/nav-auth";
 import "./globals.css";
 
@@ -16,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trion Express | AI Business Team — Answer, Book & Grow 24/7",
+  title: "Trion Express | Simple Websites + 24/7 AI for Local Businesses",
   description:
-    "AI agent for barbers, salons, restaurants, contractors. Answers customers 24/7, books appointments, captures leads, collects reviews. Live site in 24 hours. See your preview in 60 seconds.",
+    "We build websites with AI assistants for contractors, restaurants, barbershops. Launch $500–$1,500 setup or Trion Ultra $750–$2,000 + $49–$199/mo. Recurring revenue model. Done in 7–14 days. Book a free call.",
 };
 
 export default function RootLayout({
@@ -33,28 +34,34 @@ export default function RootLayout({
       >
         <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
           <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
-            <Link href="/" className="flex items-center gap-2 font-bold tracking-tight text-foreground">
-              <Image src="/trion-express-logo.png" alt="" width={32} height={32} className="rounded-lg" />
+            <Link href="/home" className="flex items-center gap-2 font-bold tracking-tight text-foreground">
+              <Image src="/trion-express-logo-orange.png" alt="" width={32} height={32} className="rounded-lg" />
               <span>Trion Express</span>
             </Link>
             <div className="flex items-center gap-4 text-sm text-muted">
-              <a href="/#services" className="hidden sm:block transition-colors hover:text-foreground">
-                Services
+              <a href="/home#launch" className="hidden sm:block transition-colors hover:text-foreground">
+                Launch
               </a>
-              <Link href="/pitch" className="hidden sm:block transition-colors hover:text-foreground">
-                Hire Agent
+              <Link href="/pitch" className="hidden sm:block transition-colors hover:text-foreground font-medium">
+                Trion Ultra
               </Link>
-              <a href="/#sites" className="hidden sm:block transition-colors hover:text-foreground">
+              <a href="/home#sites" className="hidden sm:block transition-colors hover:text-foreground">
                 Sites
               </a>
-              <a href="/#analysis" className="hidden sm:block transition-colors hover:text-foreground">
-                Analysis
+              <a href="/home#services" className="hidden sm:block transition-colors hover:text-foreground">
+                Services
               </a>
-              <a href="/#reports" className="hidden sm:block transition-colors hover:text-foreground">
-                Reports
-              </a>
-              <Link href="/pro-demo" className="hidden sm:block transition-colors hover:text-foreground">
-                Pro
+              {BOOK_CALL_URL.startsWith("/") ? (
+                <Link href={BOOK_CALL_URL} className="hidden sm:block transition-colors hover:text-foreground font-medium text-green">
+                  Make an appointment
+                </Link>
+              ) : (
+                <a href={BOOK_CALL_URL} target="_blank" rel="noopener noreferrer" className="hidden sm:block transition-colors hover:text-foreground font-medium text-green">
+                  Make an appointment
+                </a>
+              )}
+              <Link href="/partnership" className="hidden sm:block transition-colors hover:text-foreground">
+                Partnership
               </Link>
               <NavAuth />
             </div>

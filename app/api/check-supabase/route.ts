@@ -33,19 +33,23 @@ export async function GET() {
           ? "Invalid Supabase key. In Vercel, verify NEXT_PUBLIC_SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY match the project at NEXT_PUBLIC_SUPABASE_URL."
           : msg;
 
+      const projectId = url.replace(/https:\/\//, "").split(".")[0];
       return NextResponse.json({
         ok: false,
         tableExists: false,
         error: msg,
         hint,
-        projectUrl: url.replace(/https:\/\//, "").split(".")[0],
+        projectId,
+        projectUrl: projectId, // legacy
       });
     }
 
+    const projectId = url.replace(/https:\/\//, "").split(".")[0];
     return NextResponse.json({
       ok: true,
       tableExists: true,
       message: "demo_bookings table is ready. Booking should work.",
+      projectId,
     });
   } catch (err) {
     return NextResponse.json({

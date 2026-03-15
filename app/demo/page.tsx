@@ -453,7 +453,7 @@ export default function DemoPage() {
         <section className="mb-16 rounded-2xl border border-accent/20 bg-accent/5 p-8 text-center">
           <h3 className="mb-2 text-xl font-bold">Want This for Your Business?</h3>
           <p className="mb-4 text-sm text-muted">This entire site -- booking, AI chat, social feed -- built in 24 hours.</p>
-          <Link href="/#pricing" className="inline-block rounded-lg bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dim">
+          <Link href="/home#pricing" className="inline-block rounded-lg bg-accent px-6 py-2.5 font-semibold text-white hover:bg-accent-dim">
             View Packages
           </Link>
         </section>

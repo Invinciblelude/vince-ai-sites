@@ -34,26 +34,34 @@ export function ProAnalysisSection() {
   return (
     <section id="pro-analysis" className="mb-24 border-t border-border/50 pt-24">
       <div className="mb-12 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-4 py-1.5 text-sm font-bold text-amber-600">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-4 py-1.5 text-sm font-bold text-accent">
           <span>PRO</span>
-          <span className="text-amber-500/80">· Demo</span>
+          <span className="text-accent/80">· Demo</span>
         </span>
         <h2 className="mt-3 mb-2 text-3xl font-bold">I Analyze Reports & Projects</h2>
         <p className="mx-auto max-w-2xl text-muted">
           Pro feature: feasibility reports, market data, project plans. Trion extracts data, models scenarios, verifies costs, and delivers actionable tables.
         </p>
-        <Link
-          href="/pro-demo"
-          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-amber-600"
-        >
-          Try the Pro Demo — Like Building a Website
-          <span>→</span>
-        </Link>
+        <div className="mt-4 flex flex-wrap justify-center gap-3">
+          <Link
+            href="/pro-demo"
+            className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-dim"
+          >
+            Try the Pro Demo — Reports & Analysis
+            <span>→</span>
+          </Link>
+          <Link
+            href="/pro-operations"
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-accent/50 bg-accent/10 px-6 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent/20"
+          >
+            Principal Operations Support
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-12">
         {/* Static showcase — Nerrads financial table */}
-        <div className="rounded-2xl border-2 border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent overflow-hidden">
+        <div className="rounded-2xl border-2 border-accent/20 bg-gradient-to-br from-accent/5 to-transparent overflow-hidden">
           <div className="border-b border-border bg-card/50 px-6 py-4">
             <h3 className="font-semibold">Complete Financial Analysis — Strategy A: Sell Finished Lots</h3>
             <p className="text-sm text-muted">4929 Nerrads Place • Verified from CWE engineering reports</p>
@@ -125,7 +133,7 @@ export function ProAnalysisSection() {
               href="https://silvercrowdcraft.com/nerrads-project.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm font-medium text-amber-600 hover:underline"
+              className="text-sm font-medium text-accent hover:underline"
             >
               View full Nerrads analysis →
             </a>
@@ -138,7 +146,7 @@ export function ProAnalysisSection() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {WORKLOAD_STEPS.map((step) => (
               <div key={step.id} className="flex items-start gap-3 rounded-xl border border-border/60 bg-background/50 p-4">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-sm font-bold text-amber-600">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/20 text-sm font-bold text-accent">
                   {step.id}
                 </span>
                 <div>

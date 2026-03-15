@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, date, time, topic } = body;
+    const { name, email, phone, date, time, topic, notes: customNotes } = body;
 
     if (!name || !date || !time || !topic) {
       return NextResponse.json({
@@ -76,13 +76,14 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
+    const notesParts = [customNotes, email ? `Email: ${email}` : ""].filter(Boolean);
     const row = {
       name: String(name).trim(),
       phone: contact,
       service: String(topic).trim(),
       date: dateStr,
       time: timeStr,
-      notes: email ? `Email: ${email}` : "",
+      notes: notesParts.join(" · ") || "",
       status: "pending",
     };
 

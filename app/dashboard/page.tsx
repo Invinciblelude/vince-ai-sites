@@ -206,11 +206,11 @@ export default function DashboardPage() {
               <div className="text-sm text-muted">Bookings</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="text-2xl font-bold text-amber-600">{forms.length}</div>
+              <div className="text-2xl font-bold text-accent">{forms.length}</div>
               <div className="text-sm text-muted">Forms</div>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
-              <div className="text-2xl font-bold text-violet-600">{conversations.length}</div>
+              <div className="text-2xl font-bold text-accent">{conversations.length}</div>
               <div className="text-sm text-muted">Messages</div>
             </div>
           </div>

@@ -27,9 +27,11 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const PKG_LABELS: Record<string, string> = {
-  starter: "Starter ($199 + $50/mo)",
-  pro: "Pro ($349 + $75/mo)",
-  premium: "Premium ($599 + $150/mo)",
+  launch: "Launch ($500–$1,500 setup)",
+  ultra: "Trion Ultra ($750–$2,000 + $49–$199/mo)",
+  starter: "Launch (legacy)",
+  pro: "Trion Ultra (legacy)",
+  premium: "Trion Ultra Premium (legacy)",
 };
 
 export default function ClientsDashboard() {

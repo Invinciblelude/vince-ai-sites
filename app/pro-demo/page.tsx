@@ -43,7 +43,7 @@ function InputRow({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={2}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-amber-500"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
         />
       ) : (
         <input
@@ -51,7 +51,7 @@ function InputRow({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-amber-500"
+          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
         />
       )}
     </div>
@@ -88,12 +88,12 @@ export default function ProDemoPage() {
 
   return (
     <div className="animate-fade-in min-h-screen">
-      <div className="absolute inset-0 bg-gradient-to-b from-amber-500/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-accent/5 via-transparent to-transparent" />
 
       <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-24">
         {/* Hero */}
         <div className="mb-8 text-center">
-          <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 px-4 py-1.5 text-sm font-bold text-amber-600">
+          <span className="inline-flex items-center gap-2 rounded-full bg-accent/15 px-4 py-1.5 text-sm font-bold text-accent">
             PRO
           </span>
           <h1 className="mt-3 mb-3 text-4xl font-bold sm:text-5xl">
@@ -102,20 +102,28 @@ export default function ProDemoPage() {
           <p className="mx-auto max-w-2xl text-muted">
             Like building a website — but for reports. Upload Excel/CSV, paste data, or add a URL. Trion extracts, computes, and delivers structured analysis. Strategy comparison, cost breakdown, feasibility scenarios.
           </p>
-          <Link
-            href="/pitch?analyze=https://silvercrowdcraft.com/nerrads-project.html"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl border border-amber-500/50 bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
-          >
-            Talk to Trion for full analysis →
-          </Link>
+          <div className="mt-4 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/pitch?analyze=https://silvercrowdcraft.com/nerrads-project.html"
+              className="inline-flex items-center gap-2 rounded-xl border border-accent/50 bg-accent/10 px-5 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent/20"
+            >
+              Talk to Trion for full analysis →
+            </Link>
+            <Link
+              href="/pro-operations"
+              className="inline-flex items-center gap-2 rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-muted transition-colors hover:bg-muted/50"
+            >
+              Principal Operations Support
+            </Link>
+          </div>
         </div>
 
         {/* 2-col: Tell Me About Your Report + Output */}
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Left — Tell Me About Your Report */}
           <div className="min-w-0">
-            <div className="flex min-h-[420px] flex-col rounded-2xl border-2 border-amber-500/20 bg-card p-6 shadow-lg">
-              <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-amber-600">
+            <div className="flex min-h-[420px] flex-col rounded-2xl border-2 border-accent/20 bg-card p-6 shadow-lg">
+              <h3 className="mb-2 text-sm font-bold uppercase tracking-wider text-accent">
                 Tell Me About Your Report
               </h3>
               <p className="mb-4 text-xs text-muted">
@@ -136,7 +144,7 @@ export default function ProDemoPage() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full rounded-lg border border-dashed border-border bg-background px-3 py-2.5 text-sm text-muted transition-colors hover:border-amber-500 hover:bg-amber-500/5"
+                    className="w-full rounded-lg border border-dashed border-border bg-background px-3 py-2.5 text-sm text-muted transition-colors hover:border-accent hover:bg-accent/5"
                   >
                     {uploadedFile ? uploadedFile.name : "Choose file (.xlsx, .csv)"}
                   </button>
@@ -168,7 +176,7 @@ export default function ProDemoPage() {
                     id="project-type"
                     value={projectType}
                     onChange={(e) => setProjectType(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-amber-500"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-accent"
                   >
                     <option value="feasibility">Feasibility / Strategy</option>
                     <option value="cost">Cost Estimate</option>
@@ -187,14 +195,14 @@ export default function ProDemoPage() {
               <button
                 onClick={handleRunAnalysis}
                 disabled={!hasInput || isRunning}
-                className="mt-4 w-full rounded-xl bg-amber-500 py-3 font-semibold text-white transition-all hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="mt-4 w-full rounded-xl bg-accent py-3 font-semibold text-white transition-all hover:bg-accent-dim disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isRunning ? "Running workload…" : showOutput ? "Run again" : "Run Analysis"}
               </button>
               {!hasInput && (
                 <p className="mt-2 text-center text-xs text-muted">
                   Upload a file, paste data, or add a URL to run analysis.{" "}
-                  <a href="/sample-analysis-data.csv" download className="text-amber-600 hover:underline">Download sample CSV</a>
+                  <a href="/sample-analysis-data.csv" download className="text-accent hover:underline">Download sample CSV</a>
                 </p>
               )}
             </div>
@@ -209,7 +217,7 @@ export default function ProDemoPage() {
 
               {!showOutput ? (
                 <div className="flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-3xl">
+                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/10 text-3xl">
                     📊
                   </div>
                   <p className="text-sm text-muted">
@@ -225,13 +233,13 @@ export default function ProDemoPage() {
                         key={step.id}
                         className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
                           completedSteps >= step.id
-                            ? "border-amber-500/40 bg-amber-500/10"
+                            ? "border-accent/40 bg-accent/10"
                             : "border-border bg-background/50"
                         }`}
                       >
                         <span
                           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-                            completedSteps >= step.id ? "bg-amber-500 text-white" : "bg-muted text-muted"
+                            completedSteps >= step.id ? "bg-accent text-white" : "bg-muted text-muted"
                           }`}
                         >
                           {completedSteps >= step.id ? "✓" : step.id}
@@ -297,14 +305,14 @@ export default function ProDemoPage() {
         </div>
 
         {/* CTA */}
-        <div className="mt-12 rounded-2xl border-2 border-amber-500/20 bg-amber-500/5 p-8 text-center">
+        <div className="mt-12 rounded-2xl border-2 border-accent/20 bg-accent/5 p-8 text-center">
           <h3 className="mb-2 text-xl font-bold">Want the full analysis?</h3>
           <p className="mb-6 text-sm text-muted">
             Pro version: Trion analyzes your Excel, data, or reports, answers questions, and produces custom feasibility studies.
           </p>
           <Link
             href="/pitch#plans"
-            className="inline-flex items-center gap-2 rounded-xl bg-amber-500 px-8 py-3.5 font-semibold text-white transition-colors hover:bg-amber-600"
+            className="inline-flex items-center gap-2 rounded-xl bg-accent px-8 py-3.5 font-semibold text-white transition-colors hover:bg-accent-dim"
           >
             Sign up for Pro version $999 and up
             <span>→</span>

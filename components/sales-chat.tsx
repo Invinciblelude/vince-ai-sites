@@ -14,13 +14,13 @@ ABOUT OUR SERVICE:
 We build AI-powered websites and assistants for small businesses -- especially barber shops, nail technicians, hair salons, lash techs, spas, trainers, restaurants, and contractors. We also analyze feasibility reports and project plans — market analysis, competitor research, revenue projections.
 
 PACKAGES:
-1. Starter ($199 one-time + $50/mo maintenance):
+1. Launch ($500–$1,500 setup, optional $49–$99/mo):
    - Clean, mobile-friendly one-page website
    - AI assistant trained on their business (answers questions 24/7)
    - Contact form that sends leads to their phone/email
    - Live in 24-72 hours
 
-2. Pro ($349 one-time + $75/mo maintenance) -- MOST POPULAR:
+2. Trion Ultra ($750–$2,000 setup + $49–$199/mo) -- MOST POPULAR:
    - Everything in Starter
    - Online booking / calendar integration
    - Connects to Instagram, Facebook, TikTok
@@ -28,7 +28,7 @@ PACKAGES:
    - AI visual character host on homepage
    - Google Business profile optimization
 
-3. Premium ($599 one-time + $150/mo maintenance):
+3. Trion Ultra Premium ($1,500–$2,000 setup + $149–$199/mo):
    - Everything in Pro
    - AI-generated Reels & social content (4 posts/reels per month)
    - Automated booking confirmations & reminders
